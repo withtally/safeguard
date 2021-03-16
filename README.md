@@ -34,7 +34,7 @@ As a governance, I want some quorum of governance token holders to have ultimate
 
 The figure below shows how the proposed mechanism works and interacts with existing governance systems. New components are highlighted in yellow, while process flow is shown via the numbered elements.
 
-(Implementation Diagram)[tk]
+![Implementation Diagram](https://raw.githubusercontent.com/withtally/multisig-ragequit/main/assets/architecture-diagram.png)
 
 ## New components:
 
