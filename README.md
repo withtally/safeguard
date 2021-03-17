@@ -1,4 +1,4 @@
-# multisig-with-ragequit
+# tally failsafe
 
 ## Project Abstract
 
