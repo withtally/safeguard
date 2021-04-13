@@ -2,33 +2,31 @@
 
 ## Project Abstract
 
-Multisig With Ragequit Optimistic governance accountability tool built around Gnosis Multisig. It's a multisig system that allows governance to retain veto power over Gnosis Multisig contracts, and allows governance to reclaim funds entrusted to multsig holders without requiring multisig signatories approval. 
+Multisig With Ragequit Optimistic governance accountability tool built around Gnosis Multisig. It's a multisig system that allows governance to retain veto power over Gnosis Multisig contracts, and allows governance to reclaim funds entrusted to multsig holders without requiring multisig signatories approval.
 
 Example use cases include giving final veto power on the execution of multisig transactions to token holders, and the ability to reclaim funds from a multisig where the signatories are unable or unwilling to sign a refund transaction.
 
 ## Background
 
-On chain governance is slow and cumbersome, requiring coordination of many individual voters as well as substantial gas expenses. This can make it unsuitable for managing day to day operations or expenses. 
+On chain governance is slow and cumbersome, requiring coordination of many individual voters as well as substantial gas expenses. This can make it unsuitable for managing day to day operations or expenses.
 
 Protocols can help scale their governance capacities and increase agility by delegating authority to smaller decision making bodies such as multi sigs. But this presents a tradeoff between reducing friction and maintaining security, as governance has no way to claw back funds or authority from a multisig without the cooperation of the multisig signers.
 
 ## Problem
 
-Current multi sigs are a one-way delegation of power. Multi-sigs are secure but lack oversight, transparency and accountability. This lack of accountability limits protocols ability to delegate authority to subcommittees, bottlenecks protocol growth and limits the effectiveness of governance. 
+Current multi sigs are a one-way delegation of power. Multi-sigs are secure but lack oversight, transparency and accountability. This lack of accountability limits protocols ability to delegate authority to subcommittees, bottlenecks protocol growth and limits the effectiveness of governance.
 
 ## Solution / Vision
 
 Create a modular open source framework built around Gnosis MultiSig, OpenZeppelin Timelocks, Nomic Labs HardHat, and Compound Governor alpha that supports optimistic multi-sig governance.
 
-The proposed solution would work alongside existing governance structures, require no modifications to existing smart contracts, and be entirely optional. The solution would work for any governance ecosystem where the underlying token is an ERC20 and uses a checkpointing system similar to Uniswap and Compound. 
+The proposed solution would work alongside existing governance structures, require no modifications to existing smart contracts, and be entirely optional. The solution would work for any governance ecosystem where the underlying token is an ERC20 and uses a checkpointing system similar to Uniswap and Compound.
 
 ## User Stories
 
-As a governance, I want to entrust a budget to a multisig with the confidence that governance has the ability to reclaim funds without requiring the approval of the multisig signers. 
+As a governance, I want to entrust a budget to a multisig with the confidence that governance has the ability to reclaim funds without requiring the approval of the multisig signers.
 
-As a governance, I want some quorum of governance token holders to have ultimate authority to delay or cancel transactions approved by multisig signers. 
-
-
+As a governance, I want some quorum of governance token holders to have ultimate authority to delay or cancel transactions approved by multisig signers.
 
 # Preliminary Specification
 
@@ -54,3 +52,76 @@ If the main governance token holders believes that the multisig took improper ac
 
 If no action is taken to stop the queued transaction, it can be executed by the multisig after the timelock period elapses.
 
+## Development
+
+### Pre Requisites
+
+Before running any command, make sure to install dependencies:
+
+```sh
+$ yarn install
+```
+
+### Compile
+
+Compile the smart contracts with Hardhat:
+
+```sh
+$ yarn compile
+```
+
+### TypeChain
+
+Compile the smart contracts and generate TypeChain artifacts:
+
+```sh
+$ yarn typechain
+```
+
+### Lint Solidity
+
+Lint the Solidity code:
+
+```sh
+$ yarn lint:sol
+```
+
+### Lint TypeScript
+
+Lint the TypeScript code:
+
+```sh
+$ yarn lint:ts
+```
+
+### Test
+
+Run the Mocha tests:
+
+```sh
+$ yarn test
+```
+
+### Coverage
+
+Generate the code coverage report:
+
+```sh
+$ yarn coverage
+```
+
+### Report Gas
+
+See the gas usage per unit test and average gas per method call:
+
+```sh
+$ REPORT_GAS=true yarn test
+```
+
+### Clean
+
+Delete the smart contract artifacts, the coverage reports and the Hardhat cache:
+
+```sh
+$ yarn clean
+```
