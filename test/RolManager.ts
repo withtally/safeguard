@@ -19,9 +19,11 @@ type User = {
 };
 
 describe("Unit tests", function () {
-  const timelockDelay = 5; // seconds
+  const timelockDelay = 2; // seconds
   let admin: User;
   let proposer: User;
+  let executer: User;
+  let anotherProposer: User;
   let expectedRolManagerContractAddress: string;
 
   beforeEach(async function () {
@@ -34,13 +36,21 @@ describe("Unit tests", function () {
       signer: signers[1],
       address: await signers[1].getAddress(),
     };
-    
+    executer = {
+      signer: signers[2],
+      address: await signers[2].getAddress(),
+    };
+    anotherProposer = {
+      signer: signers[1],
+      address: await signers[1].getAddress(),
+    };
   });
 
   describe("RolManager", function () {
     let timelock: Timelock;
     let rolManager: RolManager;
     let proposerRole: string;
+    let executerRole: string;
 
     let target: string;
     let value: number;
@@ -66,16 +76,18 @@ describe("Unit tests", function () {
         admin.address,
       ])) as RolManager;
 
+      // contract roles
       proposerRole = await rolManager.PROPOSER_ROLE();
+      executerRole = await rolManager.EXECUTOR_ROLE();
 
       // queue transaction data
       target = rolManager.address;
       value = 0;
-      signature = "grantRole(bytes32, string)";
+      signature = "";
 
       // Encode call data
       const rolManagerInterface = new ethers.utils.Interface(RolManagerArtifact.abi);
-      callData = rolManagerInterface.encodeFunctionData("grantRole", [proposerRole, proposer.address]);
+      callData = rolManagerInterface.encodeFunctionData("hasRole", [proposerRole, anotherProposer.address]);
     });
 
     it("successfully deploys", async function () {
@@ -116,11 +128,34 @@ describe("Unit tests", function () {
       it("should be able to queue transaction to timelock", async function () {
         const currentBlock = await admin.signer.provider?.getBlock("latest");
         const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
-        eta = currentTimestamp + 20;
+        eta = currentTimestamp + 3;
 
         await expect(
           rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
         ).to.emit(timelock, "QueueTransaction");
+      });
+    });
+
+    describe("Executer", function () {
+      beforeEach(async function () {
+        await rolManager.grantRole(proposerRole, proposer.address);
+        await rolManager.grantRole(executerRole, executer.address);
+      });
+
+      it("should be able to execute transaction to timelock", async function () {
+        const currentBlock = await admin.signer.provider?.getBlock("latest");
+        const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
+        eta = currentTimestamp + 3;
+
+        await expect(
+          rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "QueueTransaction");
+
+        await ethers.provider.send( 'evm_mine', [eta]);
+
+        await expect(
+          rolManager.connect(executer.signer).executeTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "ExecuteTransaction");
       });
     });
   });

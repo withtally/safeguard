@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "hardhat/console.sol";
 
 contract Timelock {
     using SafeMath for uint;
@@ -13,7 +14,7 @@ contract Timelock {
     event QueueTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint eta);
 
     // NOTE: THESE VALUES ARE FOR TESTING ONLY!
-    uint public constant GRACE_PERIOD = 10 minutes;
+    uint public constant GRACE_PERIOD = 1 seconds;
     uint public constant MINIMUM_DELAY = 1 seconds;
     uint public constant MAXIMUM_DELAY = 10 minutes;
 
