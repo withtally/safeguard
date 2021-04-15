@@ -99,14 +99,14 @@ describe("Unit tests", function () {
       expect(await timelock.admin()).to.be.eq(rolManager.address);
     });
 
-    it("should reject queuing from not authorized role", async function () {
-      eta = 2;
-      await expect(rolManager.queueTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
-        "RolManager: sender requires permission",
-      );
-    });
 
     describe("Admin", function () {
+      beforeEach(async function () {
+        const currentBlock = await admin.signer.provider?.getBlock("latest");
+        const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
+        eta = currentTimestamp + 3;
+      });
+
       it("should be able to grant role", async function () {
         await rolManager.grantRole(proposerRole, proposer.address);
         expect(await rolManager.hasRole(proposerRole, proposer.address)).to.be.true;
@@ -118,14 +118,16 @@ describe("Unit tests", function () {
         await rolManager.revokeRole(proposerRole, proposer.address);
         expect(await rolManager.hasRole(proposerRole, proposer.address)).to.be.false;
       });
-    });
 
-    describe("Proposer", function () {
-      beforeEach(async function () {
-        await rolManager.grantRole(proposerRole, proposer.address);
+      it("should not be able to queue transaction", async function () {
+        await expect(rolManager.queueTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+          "RolManager: sender requires permission",
+        );
       });
 
-      it("should be able to queue transaction to timelock", async function () {
+      it("should not be able to execute queued transaction from timelock", async function () {
+        await rolManager.grantRole(proposerRole, proposer.address);
+
         const currentBlock = await admin.signer.provider?.getBlock("latest");
         const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
         eta = currentTimestamp + 3;
@@ -133,6 +135,63 @@ describe("Unit tests", function () {
         await expect(
           rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
         ).to.emit(timelock, "QueueTransaction");
+        
+        await expect(rolManager.connect(admin.signer).executeTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+          "RolManager: sender requires permission",
+        );
+
+      });
+
+      it("should be able to cancel queued transaction from timelock", async function () {
+        await rolManager.grantRole(proposerRole, proposer.address);
+
+        const currentBlock = await admin.signer.provider?.getBlock("latest");
+        const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
+        eta = currentTimestamp + 3;
+
+        await expect(
+          rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "QueueTransaction");
+
+        await expect(
+          rolManager.connect(admin.signer).cancelTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "CancelTransaction");
+
+      });
+    });
+
+    describe("Proposer", function () {
+      beforeEach(async function () {
+        await rolManager.grantRole(proposerRole, proposer.address);
+        const currentBlock = await admin.signer.provider?.getBlock("latest");
+        const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
+        eta = currentTimestamp + 3;
+      });
+
+      it("should be able to queue transaction to timelock", async function () {
+        await expect(
+          rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "QueueTransaction");
+      });
+
+      it("should reject canceling transaction", async function () {
+        await expect(
+          rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "QueueTransaction");
+        
+        await expect(rolManager.connect(proposer.signer).cancelTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+          "RolManager: sender requires permission",
+        );
+      });
+
+      it("should reject executing transaction", async function () {
+        await expect(
+          rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "QueueTransaction");
+
+        await expect(rolManager.connect(proposer.signer).executeTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+          "RolManager: sender requires permission",
+        );
       });
     });
 
@@ -140,13 +199,28 @@ describe("Unit tests", function () {
       beforeEach(async function () {
         await rolManager.grantRole(proposerRole, proposer.address);
         await rolManager.grantRole(executerRole, executer.address);
-      });
-
-      it("should be able to execute transaction to timelock", async function () {
         const currentBlock = await admin.signer.provider?.getBlock("latest");
         const currentTimestamp = (await currentBlock?.timestamp) ?? 0;
         eta = currentTimestamp + 3;
+      });
 
+      it("should reject queuing transaction", async function () {
+        await expect(rolManager.connect(executer.signer).queueTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+          "RolManager: sender requires permission",
+        );
+      });
+
+      it("should reject canceling transaction", async function () {
+        await expect(
+          rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        ).to.emit(timelock, "QueueTransaction");
+
+        await expect(rolManager.connect(executer.signer).cancelTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+          "RolManager: sender requires permission",
+        );
+      });
+
+      it("should be able to execute transaction to timelock", async function () {
         await expect(
           rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
         ).to.emit(timelock, "QueueTransaction");
