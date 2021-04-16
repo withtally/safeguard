@@ -18,10 +18,11 @@ const { deployContract } = waffle;
 
 describe("Unit tests", function () {
   const timelockDelay = 2; // seconds
+
   let admin: User;
   let proposer: User;
   let executer: User;
-  let proposedAdmin: User;
+  let proposedAdminAddress: string;
   let expectedRolManagerContractAddress: string;
 
   before(async function () {
@@ -38,10 +39,8 @@ describe("Unit tests", function () {
       signer: signers[2],
       address: await signers[2].getAddress(),
     };
-    proposedAdmin = {
-      signer: signers[1],
-      address: await signers[1].getAddress(),
-    };
+
+    proposedAdminAddress =await signers[1].getAddress();
   });
 
   describe("RolManager", function () {
@@ -82,7 +81,7 @@ describe("Unit tests", function () {
 
       // Encode call data
       const timelockInterface = new ethers.utils.Interface(TimelockArtifact.abi);
-      callData = timelockInterface.encodeFunctionData("setPendingAdmin", [proposedAdmin.address]);
+      callData = timelockInterface.encodeFunctionData("setPendingAdmin", [proposedAdminAddress]);
     });
 
     it("successfully deploys", async function () {
@@ -218,7 +217,7 @@ describe("Unit tests", function () {
           rolManager.connect(executer.signer).executeTransaction(target, value, signature, callData, eta),
         ).to.emit(timelock, "ExecuteTransaction");
 
-        expect(await timelock.pendingAdmin()).to.be.eq(proposedAdmin.address);
+        expect(await timelock.pendingAdmin()).to.be.eq(proposedAdminAddress);
       });
     });
   });
