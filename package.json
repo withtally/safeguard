@@ -7,6 +7,7 @@
     "url": "https://paulrberg.com"
   },
   "dependencies": {
+    "@gnosis.pm/safe-contracts": "^1.2.0",
     "@openzeppelin/contracts": "^4.0.0"
   },
   "devDependencies": {
