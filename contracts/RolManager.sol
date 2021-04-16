@@ -44,12 +44,13 @@ contract RolManager is AccessControl {
 
     function cancelTransaction(address target, uint value, string memory signature, bytes memory data, uint eta) public justByRole(ROLMANAGER_ADMIN_ROLE) {
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
-       _cancelTimelockTransaction(txHash, target, value, signature, data, eta);
+        _cancelTimelockTransaction(txHash, target, value, signature, data, eta);
     }
 
-    function executeTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public justByRole(EXECUTOR_ROLE) {
-        bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
-        _executeTimelockTransaction(txHash, target, value, signature, data, eta);
+    function executeTransaction(address target, uint256 _value, string memory signature, bytes memory data, uint256 eta) public payable justByRole(EXECUTOR_ROLE) {
+        bytes32 txHash = keccak256(abi.encode(target, _value, signature, data, eta));
+        require(timelock.queuedTransactions(txHash), "RolManager::executeTransaction: transaction should be queued");
+        timelock.executeTransaction{value: _value}(target, _value, signature, data, eta);
     }
 
     function _queueTimelockTransaction(bytes32 txHash, address target, uint256 value, string memory signature, bytes memory data, uint256 eta) private {
@@ -61,10 +62,4 @@ contract RolManager is AccessControl {
         require(timelock.queuedTransactions(txHash), "RolManager::cancelTransaction: transaction should be queued");
         timelock.cancelTransaction(target, value, signature, data, eta);
     }
-
-    function _executeTimelockTransaction(bytes32 txHash, address target, uint value, string memory signature, bytes memory data, uint eta) private {
-        require(timelock.queuedTransactions(txHash), "RolManager::executeTransaction: transaction should be queued");
-        timelock.executeTransaction{value: value}(target, value, signature, data, eta);
-    }
-
 }
