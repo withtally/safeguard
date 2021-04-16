@@ -1,5 +1,5 @@
-
 import { ethers } from "hardhat";
+import { ParamType } from "ethers/lib/utils";
 
 // types
 import {User} from './types';
@@ -29,4 +29,9 @@ export const getExpectedContractAddress = async (deployer: User): Promise<string
   });
 
   return expectedContractAddress;
+}
+
+export const encodeParameters = (types: (string | ParamType)[], values: any[]): string => {
+  const abi = new ethers.utils.AbiCoder();
+  return abi.encode(types, values);
 }

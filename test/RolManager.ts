@@ -1,15 +1,15 @@
 import { ethers, waffle } from "hardhat";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { expect } from "chai";
+import { BigNumberish } from "ethers";
 
 // types
 import { Timelock, RolManager } from "../typechain";
-import {User} from './types';
+import { User } from "./types";
 
 // contract artifacts
 import RolManagerArtifact from "../artifacts/contracts/RolManager.sol/RolManager.json";
 import TimelockArtifact from "../artifacts/contracts/Timelock.sol/Timelock.json";
-import { BigNumberish } from "ethers";
 
 // utils
 import { mineBlockAtTimestamp, getTransactionEta, getExpectedContractAddress } from "./utils";
@@ -40,7 +40,7 @@ describe("Unit tests", function () {
       address: await signers[2].getAddress(),
     };
 
-    proposedAdminAddress =await signers[1].getAddress();
+    proposedAdminAddress = await signers[3].getAddress();
   });
 
   describe("RolManager", function () {
