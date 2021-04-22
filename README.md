@@ -2,7 +2,7 @@
 
 ## Project Abstract
 
-Multisig With Ragequit Optimistic governance accountability tool built around Gnosis Multisig. It's a multisig system that allows governance to retain veto power over Gnosis Multisig contracts, and allows governance to reclaim funds entrusted to multsig holders without requiring multisig signatories approval. 
+Failsafe governance accountability tool built around the Gnosis Safe multisig. It's a multisig system that allows governance to retain veto power over Gnosis Safe contracts, and allows governance to reclaim funds entrusted to multsig holders without requiring multisig signatories approval. 
 
 Example use cases include giving final veto power on the execution of multisig transactions to token holders, and the ability to reclaim funds from a multisig where the signatories are unable or unwilling to sign a refund transaction.
 
