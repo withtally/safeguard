@@ -50,7 +50,7 @@ contract RolManager is AccessControl {
     function executeTransaction(address target, uint256 _value, string memory signature, bytes memory data, uint256 eta) public payable justByRole(EXECUTOR_ROLE) {
         bytes32 txHash = keccak256(abi.encode(target, _value, signature, data, eta));
         require(timelock.queuedTransactions(txHash), "RolManager::executeTransaction: transaction should be queued");
-        timelock.executeTransaction{value: _value}(target, _value, signature, data, eta);
+        timelock.executeTransaction{value: _value, gas: gasleft()}(target, _value, signature, data, eta);
     }
 
     function _queueTimelockTransaction(bytes32 txHash, address target, uint256 value, string memory signature, bytes memory data, uint256 eta) private {

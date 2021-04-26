@@ -65,7 +65,7 @@ export const generateMultisigWallet = async (signers: string[], treshold: number
     const proxyCreationTx = await gnosisProxyFactory.createProxy(gnosisSafeMasterCopy.address, gnosisSafeData);
     const proxyCreationTxReceipt = await proxyCreationTx.wait();
 
-    const gnosisSafe = await getParamFromTxEvent(
+    const gnosisSafe = await getGnosisSafeContractFromTxEvent(
       proxyCreationTxReceipt.events,
       "ProxyCreation",
       gnosisProxyFactory.address,
@@ -79,7 +79,7 @@ export const generateMultisigWallet = async (signers: string[], treshold: number
   }
 };
 
-async function getParamFromTxEvent(
+async function getGnosisSafeContractFromTxEvent(
   events: Event[],
   eventName: string,
   contractAddress: string,

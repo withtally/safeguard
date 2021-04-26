@@ -10,9 +10,11 @@ import { User } from "../types";
 // contract artifacts
 import RolManagerArtifact from "../../artifacts/contracts/RolManager.sol/RolManager.json";
 import TimelockArtifact from "../../artifacts/contracts/Timelock.sol/Timelock.json";
+import MockContractArtifact from "../../artifacts/contracts/mocks/MockContract.sol/MockContract.json";
 
 // utils
 import { getTransactionEta, getExpectedContractAddress, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
+import { MockContract } from "../../typechain/MockContract";
 
 const { deployContract } = waffle;
 
@@ -29,6 +31,7 @@ describe("Unit tests - Gnosis scenario", function () {
 
   let timelock: Timelock;
   let rolManager: RolManager;
+  let mockContract: MockContract;
   let proposerRole: string;
   let executorRole: string;
 
@@ -80,6 +83,7 @@ describe("Unit tests - Gnosis scenario", function () {
       admin.address,
     ])) as RolManager;
 
+    mockContract = (await deployContract(admin.signer, MockContractArtifact, [])) as MockContract;
     // contract roles
     proposerRole = await rolManager.PROPOSER_ROLE();
     executorRole = await rolManager.EXECUTOR_ROLE();
@@ -139,17 +143,53 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should be able to execute transaction queued by multisig", async function () {
     await rolManager.grantRole(executorRole, executor.address);
-    await expect(rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta)).to.emit(
-      timelock,
-      "QueueTransaction",
-    );
+    await expect(
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+    ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);
 
     await expect(
-      rolManager.connect(executor.signer).executeTransaction(target, value, signature, callData, eta),
+      rolManager
+        .connect(executor.signer)
+        .executeTransaction(target, value, signature, callData, eta, { gasLimit: 2500000 }),
     ).to.emit(timelock, "ExecuteTransaction");
 
     expect(await timelock.pendingAdmin()).to.be.eq(multisigDeployer.address);
+  });
+
+  it("should be able to execute eth valued transactions", async function () {
+    await rolManager.grantRole(executorRole, executor.address);
+    const amountToSend = ethers.utils.parseEther("1");
+
+    // define transaction data
+    const targetValuedTran = mockContract.address;
+    const valueForValuedTran = amountToSend;
+
+    // Encode call data
+    const mockContractInterface = new ethers.utils.Interface(MockContractArtifact.abi);
+    const callDataValuedTran = mockContractInterface.encodeFunctionData("_transfer", [
+      multisigDeployer.address,
+      amountToSend,
+    ]);
+
+    await expect(
+      rolManager
+        .connect(multisigDeployer.signer)
+        .queueTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta),
+    ).to.emit(timelock, "QueueTransaction");
+
+    await mineBlockAtTimestamp(eta);
+
+    await expect(
+      rolManager
+        .connect(executor.signer)
+        .executeTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta, {
+          value: amountToSend,
+          gasLimit: 2500000,
+        }),
+    ).to.emit(timelock, "ExecuteTransaction");
+
+    expect(await mockContract.lastReceiver()).to.be.eq(multisigDeployer.address);
   });
 });
