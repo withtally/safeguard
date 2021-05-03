@@ -94,6 +94,9 @@ describe("RolManager - Unit tests", function () {
     it("should be able to grant role", async function () {
       await rolManager.grantRole(proposerRole, proposer.address);
       expect(await rolManager.hasRole(proposerRole, proposer.address)).to.be.true;
+      // check enumerable list available
+      expect(await rolManager.getRoleMemberCount(proposerRole)).to.be.eq(1);
+      expect(await rolManager.getRoleMember(proposerRole, 0)).to.be.eq(proposer.address);
     });
 
     it("should be able to revoke role", async function () {

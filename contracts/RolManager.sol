@@ -1,10 +1,10 @@
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./TimelockInterface.sol";
 import "hardhat/console.sol";
 
-contract RolManager is AccessControl {
+contract RolManager is AccessControlEnumerable {
 
     bytes32 public constant ROLMANAGER_ADMIN_ROLE = keccak256("ROLMANAGER_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
