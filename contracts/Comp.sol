@@ -7,10 +7,10 @@ pragma experimental ABIEncoderV2;
 
 contract Comp {
     /// @notice EIP-20 token name for this token
-    string public constant name = "Natacha";
+    string public constant name = "Uniswap";
 
     /// @notice EIP-20 token symbol for this token
-    string public constant symbol = "NANI";
+    string public constant symbol = "UNI";
 
     /// @notice EIP-20 token decimals for this token
     uint8 public constant decimals = 18;
@@ -64,7 +64,7 @@ contract Comp {
      * @dev Construct a new Comp token
      * @param account The initial account to grant all the tokens
      */
-    constructor(address account) public {
+    constructor(address account) {
         balances[account] = uint96(totalSupply);
         emit Transfer(address(0), account, totalSupply);
     }

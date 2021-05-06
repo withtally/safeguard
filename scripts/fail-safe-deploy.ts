@@ -1,12 +1,19 @@
 import { Contract, ContractFactory } from "ethers";
 import { ethers } from "hardhat";
+import { resolve } from "path";
+import { config as dotenvConfig } from "dotenv";
 
 // utils
 import { getExpectedContractAddress } from "../test/utils";
 
+dotenvConfig({ path: resolve(__dirname, "./.env") });
+
 async function main(): Promise<void> {
-  const metamaskAddress = "0xfeF621869b404a2240C5B10783477cA459B2a4b1";
-  const safeAddress = "0x78AE2Ce1C6Db73bDa49eEc9e10802a4BC7DD846b";
+  if (!process.env.METAMASK_ADDRESS) {
+    return console.log("Please set your METAMASK_ADDRESS in a .env file");
+  } 
+  const metamaskAddress = process.env.METAMASK_ADDRESS;
+  const safeAddress = process.env.SAFE_ADDRESS;
   const timelockDelay = 300; // 5 minutes
 
   // We define the timelock contract Factory
