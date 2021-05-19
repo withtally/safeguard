@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   await rolManager.deployed();
 
   const Token: ContractFactory = await ethers.getContractFactory("Comp");
-  const token: Contract = await Token.deploy(metamaskAddress);
+  const token: Contract = await Token.deploy(safeAddress);
   await token.deployed();
 
   console.log("Contracts deployed to: ", {

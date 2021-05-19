@@ -9,6 +9,7 @@ contract RolManager is AccessControlEnumerable {
     bytes32 public constant ROLMANAGER_ADMIN_ROLE = keccak256("ROLMANAGER_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
+    bytes32 public constant CANCELER_ROLE = keccak256("CANCELER_ROLE");
 
     ///@dev The address of the Timelock
     TimelockInterface public timelock;
@@ -21,6 +22,7 @@ contract RolManager is AccessControlEnumerable {
         _setRoleAdmin(ROLMANAGER_ADMIN_ROLE, ROLMANAGER_ADMIN_ROLE);
         _setRoleAdmin(PROPOSER_ROLE, ROLMANAGER_ADMIN_ROLE);
         _setRoleAdmin(EXECUTOR_ROLE, ROLMANAGER_ADMIN_ROLE);
+        _setRoleAdmin(CANCELER_ROLE, ROLMANAGER_ADMIN_ROLE);
 
         // set admin rol to an address
         _setupRole(ROLMANAGER_ADMIN_ROLE, _admin);
@@ -42,7 +44,7 @@ contract RolManager is AccessControlEnumerable {
         _queueTimelockTransaction(txHash, target, value, signature, data, eta);
     }
 
-    function cancelTransaction(address target, uint value, string memory signature, bytes memory data, uint eta) public justByRole(ROLMANAGER_ADMIN_ROLE) {
+    function cancelTransaction(address target, uint value, string memory signature, bytes memory data, uint eta) public justByRole(CANCELER_ROLE) {
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         _cancelTimelockTransaction(txHash, target, value, signature, data, eta);
     }
