@@ -6,7 +6,10 @@
     "name": "Paul Razvan Berg",
     "url": "https://paulrberg.com"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@gnosis.pm/safe-contracts": "^1.2.0",
+    "@openzeppelin/contracts": "^4.0.0"
+  },
   "devDependencies": {
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
@@ -71,6 +74,7 @@
     "prettier": "prettier --config .prettierrc --write \"**/*.{js,json,md,sol,ts}\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,md,sol,ts}\"",
     "test": "hardhat test",
-    "typechain": "hardhat typechain"
+    "typechain": "hardhat typechain",
+    "deploy:rinkeby": "npx hardhat run scripts/fail-safe-deploy.ts --network rinkeby"
   }
 }
