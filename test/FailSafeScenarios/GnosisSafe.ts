@@ -117,13 +117,13 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should be able to queue transaction to timelock", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
   });
 
   it("should reject canceling transaction", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
@@ -133,7 +133,7 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should reject executing transaction", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
@@ -144,7 +144,7 @@ describe("Unit tests - Gnosis scenario", function () {
   it("should be able to execute transaction queued by multisig", async function () {
     await rolManager.grantRole(executorRole, executor.address);
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);
@@ -176,7 +176,7 @@ describe("Unit tests - Gnosis scenario", function () {
     await expect(
       rolManager
         .connect(multisigDeployer.signer)
-        .queueTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta),
+        .queueTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);

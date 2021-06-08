@@ -100,3 +100,24 @@ async function getGnosisSafeContractFromTxEvent(
     return param;
   }
 }
+
+// returns a random integer from 1 to 9
+export const getRandomNum = () => {
+  const randomNum = Math.floor(Math.random() * 10);
+
+  if (randomNum === 0) {
+    return 1;
+  }
+
+  return randomNum;
+};
+
+export const parseEvent = (events: any[], eventSignature: string) => {
+  if (Array.isArray(events)) {
+    const event = events.find((e: any) => {
+      return e.eventSignature === eventSignature;
+    });
+    return event || null;
+  }
+  return null;
+};

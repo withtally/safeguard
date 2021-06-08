@@ -1,0 +1,5 @@
+{
+    "INVALID_FAILSAFE_INDEX": "Registry: Invalid index",
+    "INVALID_VERSION": "Registry: Invalid version",
+    "ALREADY_REGISTERED": "Registry: FailSafe already registered"
+}

@@ -1,10 +1,13 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "./TimelockInterface.sol";
+import "./ITimelock.sol";
 import "hardhat/console.sol";
 
 contract RolManager is AccessControlEnumerable {
+
+    // Request info event
+    event QueueTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint eta, string description);
 
     bytes32 public constant ROLMANAGER_ADMIN_ROLE = keccak256("ROLMANAGER_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
@@ -12,7 +15,7 @@ contract RolManager is AccessControlEnumerable {
     bytes32 public constant CANCELER_ROLE = keccak256("CANCELER_ROLE");
 
     ///@dev The address of the Timelock
-    TimelockInterface public timelock;
+    ITimelock public timelock;
 
     /**
      * @dev Initializes the contract with a given Timelock address and administrator address.
@@ -28,7 +31,7 @@ contract RolManager is AccessControlEnumerable {
         _setupRole(ROLMANAGER_ADMIN_ROLE, _admin);
 
         // set timelock address
-        timelock = TimelockInterface(_timelock);
+        timelock = ITimelock(_timelock);
     }
 
     /**
@@ -39,9 +42,10 @@ contract RolManager is AccessControlEnumerable {
         _;
     }
 
-    function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public justByRole(PROPOSER_ROLE) {
+    function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta, string memory description) public justByRole(PROPOSER_ROLE) {
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         _queueTimelockTransaction(txHash, target, value, signature, data, eta);
+        emit QueueTransaction(txHash, target, value, signature, data, eta, description);
     }
 
     function cancelTransaction(address target, uint value, string memory signature, bytes memory data, uint eta) public justByRole(CANCELER_ROLE) {
