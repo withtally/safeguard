@@ -13,7 +13,7 @@ import TimelockArtifact from "../../artifacts/contracts/Timelock.sol/Timelock.js
 import MockContractArtifact from "../../artifacts/contracts/mocks/MockContract.sol/MockContract.json";
 
 // utils
-import { getTransactionEta, getExpectedContractAddress, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
+import { getTransactionEta, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
 import { MockContract } from "../../typechain/MockContract";
 
 const { deployContract } = waffle;
@@ -26,7 +26,6 @@ describe("Unit tests - Gnosis scenario", function () {
   let walletSigner2: User;
   let multisigDeployer: User;
   let executor: User;
-  let expectedRolManagerContractAddress: string;
   let gnosisSafeWallet: Contract;
 
   let timelock: Timelock;
@@ -69,19 +68,12 @@ describe("Unit tests - Gnosis scenario", function () {
     // deploy gnosisSafe wallet
     gnosisSafeWallet = await generateMultisigWallet(walletSigners, 1, multisigDeployer);
 
-    // Get RolManager contract expected deploy address
-    expectedRolManagerContractAddress = await getExpectedContractAddress(admin);
+    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
 
     // contract deployments
-    timelock = (await deployContract(admin.signer, TimelockArtifact, [
-      expectedRolManagerContractAddress,
-      timelockDelay,
-    ])) as Timelock;
+    timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [
-      timelock.address,
-      admin.address,
-    ])) as RolManager;
+    await rolManager.setTimelock(timelock.address);
 
     mockContract = (await deployContract(admin.signer, MockContractArtifact, [])) as MockContract;
     // contract roles
@@ -117,13 +109,13 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should be able to queue transaction to timelock", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
   });
 
   it("should reject canceling transaction", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
@@ -133,7 +125,7 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should reject executing transaction", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
@@ -144,7 +136,7 @@ describe("Unit tests - Gnosis scenario", function () {
   it("should be able to execute transaction queued by multisig", async function () {
     await rolManager.grantRole(executorRole, executor.address);
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
+      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);
@@ -176,7 +168,7 @@ describe("Unit tests - Gnosis scenario", function () {
     await expect(
       rolManager
         .connect(multisigDeployer.signer)
-        .queueTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta),
+        .queueTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta, ""),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);

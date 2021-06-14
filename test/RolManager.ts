@@ -12,23 +12,24 @@ import RolManagerArtifact from "../artifacts/contracts/RolManager.sol/RolManager
 import TimelockArtifact from "../artifacts/contracts/Timelock.sol/Timelock.json";
 
 // utils
-import { mineBlockAtTimestamp, getTransactionEta, getExpectedContractAddress } from "./utils";
-
+import { mineBlockAtTimestamp, getTransactionEta } from "./utils";
 const { deployContract } = waffle;
 
 describe("RolManager - Unit tests", function () {
   const timelockDelay = 2; // seconds
+  const timelockInterface = new ethers.utils.Interface(TimelockArtifact.abi);
 
   let admin: User;
   let proposer: User;
   let executer: User;
+  let canceler: User;
   let proposedAdminAddress: string;
-  let expectedRolManagerContractAddress: string;
 
   let timelock: Timelock;
   let rolManager: RolManager;
   let proposerRole: string;
   let executerRole: string;
+  let cancelerRole: string;
 
   let target: string;
   let value: BigNumberish;
@@ -50,26 +51,25 @@ describe("RolManager - Unit tests", function () {
       signer: signers[2],
       address: await signers[2].getAddress(),
     };
+    canceler = {
+      signer: signers[3],
+      address: await signers[3].getAddress(),
+    };
 
     proposedAdminAddress = await signers[3].getAddress();
 
-    // Get RolManager contract expected deploy address
-    expectedRolManagerContractAddress = await getExpectedContractAddress(admin);
-
     // contract deployments
-    timelock = (await deployContract(admin.signer, TimelockArtifact, [
-      expectedRolManagerContractAddress,
-      timelockDelay,
-    ])) as Timelock;
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [
-      timelock.address,
-      admin.address,
-    ])) as RolManager;
+    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
+
+    timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
+
+    await rolManager.setTimelock(timelock.address);
 
     // contract roles
     proposerRole = await rolManager.PROPOSER_ROLE();
     executerRole = await rolManager.EXECUTOR_ROLE();
+    cancelerRole = await rolManager.CANCELER_ROLE();
 
     // define transaction data
     target = timelock.address;
@@ -77,7 +77,6 @@ describe("RolManager - Unit tests", function () {
     signature = "";
 
     // Encode call data
-    const timelockInterface = new ethers.utils.Interface(TimelockArtifact.abi);
     callData = timelockInterface.encodeFunctionData("setPendingAdmin", [proposedAdminAddress]);
   });
 
@@ -110,7 +109,7 @@ describe("RolManager - Unit tests", function () {
     it("should not be able to queue transaction", async function () {
       eta = await getTransactionEta(timelockDelay);
 
-      await expect(rolManager.queueTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
+      await expect(rolManager.queueTransaction(target, value, signature, callData, eta, "")).to.be.revertedWith(
         "RolManager: sender requires permission",
       );
     });
@@ -121,27 +120,12 @@ describe("RolManager - Unit tests", function () {
       eta = await getTransactionEta(timelockDelay);
 
       await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
         rolManager.connect(admin.signer).executeTransaction(target, value, signature, callData, eta),
       ).to.be.revertedWith("RolManager: sender requires permission");
-    });
-
-    it("should be able to cancel queued transaction from timelock", async function () {
-      await rolManager.grantRole(proposerRole, proposer.address);
-
-      eta = await getTransactionEta(timelockDelay);
-
-      await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
-      ).to.emit(timelock, "QueueTransaction");
-
-      await expect(rolManager.connect(admin.signer).cancelTransaction(target, value, signature, callData, eta)).to.emit(
-        timelock,
-        "CancelTransaction",
-      );
     });
   });
 
@@ -156,13 +140,28 @@ describe("RolManager - Unit tests", function () {
 
     it("should be able to queue transaction to timelock", async function () {
       await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.emit(timelock, "QueueTransaction");
+    });
+
+    it("should be able to queue transaction with description", async function () {
+      const description = "My tx description";
+      const abiCoder = new ethers.utils.AbiCoder();
+      const encodedFucnCall = abiCoder.encode(
+        ["address", "uint256", "string", "bytes", "uint256"],
+        [target, value, signature, callData, eta],
+      );
+      const expectedHash = ethers.utils.keccak256(encodedFucnCall);
+      await expect(
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, description),
+      )
+        .to.emit(rolManager, "QueueTransaction")
+        .withArgs(expectedHash, target, value, signature, callData, eta, description);
     });
 
     it("should reject canceling transaction", async function () {
       await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -172,7 +171,7 @@ describe("RolManager - Unit tests", function () {
 
     it("should reject executing transaction", async function () {
       await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -193,13 +192,13 @@ describe("RolManager - Unit tests", function () {
 
     it("should reject queuing transaction", async function () {
       await expect(
-        rolManager.connect(executer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(executer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.be.revertedWith("RolManager: sender requires permission");
     });
 
     it("should reject canceling transaction", async function () {
       await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -209,7 +208,7 @@ describe("RolManager - Unit tests", function () {
 
     it("should be able to execute transaction to timelock", async function () {
       await expect(
-        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
       ).to.emit(timelock, "QueueTransaction");
 
       await mineBlockAtTimestamp(eta);
@@ -219,6 +218,30 @@ describe("RolManager - Unit tests", function () {
       ).to.emit(timelock, "ExecuteTransaction");
 
       expect(await timelock.pendingAdmin()).to.be.eq(proposedAdminAddress);
+    });
+  });
+
+  describe("Canceler", function () {
+    before(async function () {
+      await rolManager.grantRole(cancelerRole, canceler.address);
+    });
+
+    beforeEach(async function () {
+      eta = await getTransactionEta(timelockDelay);
+    });
+
+    it("should be able to cancel queued transaction from timelock", async function () {
+      await rolManager.grantRole(proposerRole, proposer.address);
+
+      eta = await getTransactionEta(timelockDelay);
+
+      await expect(
+        rolManager.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      ).to.emit(timelock, "QueueTransaction");
+
+      await expect(
+        rolManager.connect(canceler.signer).cancelTransaction(target, value, signature, callData, eta),
+      ).to.emit(timelock, "CancelTransaction");
     });
   });
 });
