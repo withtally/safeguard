@@ -28,10 +28,10 @@ describe("Factory", () => {
   });
 
   it("Should create RolManager", async () => {
-    const res = await factory.connect(admin).createFailSafe(40);
+    const res = await factory.connect(admin).createFailSafe(40, "My failSafe");
     const txReceipt = await res.wait();
 
-    const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address)");
+    const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address,string)");
     expect(event, "no event emitted").to.be.not.null;
 
     const newRolManager = (await ethers.getContractAt("RolManager", event.args.rolManagerAddress)) as RolManager;

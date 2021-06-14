@@ -20,7 +20,8 @@ contract RolManagerFactory {
     event RolManagerCreated(
         address indexed admin,
         address indexed rolManagerAddress,
-        address indexed timelockAddress
+        address indexed timelockAddress,
+        string safeName
     );
 
     constructor(address registry_) {
@@ -30,13 +31,15 @@ contract RolManagerFactory {
     /**
      * @notice Creates new instance of a FailSafe contract
      */
-    function createFailSafe(uint delay_) external returns (address) {
-        Timelock timelock = new Timelock(address(this), delay_);
-        RolManager rolManager = new RolManager(address(timelock), msg.sender);
+    function createFailSafe(uint delay_, string memory safeName) external returns (address) {
+        
+        RolManager rolManager = new RolManager(msg.sender);
+        Timelock timelock = new Timelock(address(rolManager), delay_);
+        rolManager.setTimelock(address(timelock));
 
         IRegistry(registry).register(address(rolManager), ROL_MANAGER_VERSION);
 
-        emit RolManagerCreated(msg.sender, address(rolManager), address(timelock));
+        emit RolManagerCreated(msg.sender, address(rolManager), address(timelock), safeName);
         return address(rolManager);
     }
 }

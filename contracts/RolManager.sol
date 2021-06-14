@@ -20,7 +20,7 @@ contract RolManager is AccessControlEnumerable {
     /**
      * @dev Initializes the contract with a given Timelock address and administrator address.
      */
-    constructor (address _timelock, address _admin) {
+    constructor (address _admin) {
         // set roles administrator
         _setRoleAdmin(ROLMANAGER_ADMIN_ROLE, ROLMANAGER_ADMIN_ROLE);
         _setRoleAdmin(PROPOSER_ROLE, ROLMANAGER_ADMIN_ROLE);
@@ -29,9 +29,6 @@ contract RolManager is AccessControlEnumerable {
 
         // set admin rol to an address
         _setupRole(ROLMANAGER_ADMIN_ROLE, _admin);
-
-        // set timelock address
-        timelock = ITimelock(_timelock);
     }
 
     /**
@@ -40,6 +37,12 @@ contract RolManager is AccessControlEnumerable {
     modifier justByRole(bytes32 role) {
         require(hasRole(role, _msgSender()), "RolManager: sender requires permission");
         _;
+    }
+
+    function setTimelock(address _timelock) public {
+        require(address(timelock) == address(0), "timelock already added");
+        // set timelock address
+        timelock = ITimelock(_timelock);
     }
 
     function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta, string memory description) public justByRole(PROPOSER_ROLE) {

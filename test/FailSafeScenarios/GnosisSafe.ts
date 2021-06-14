@@ -13,7 +13,7 @@ import TimelockArtifact from "../../artifacts/contracts/Timelock.sol/Timelock.js
 import MockContractArtifact from "../../artifacts/contracts/mocks/MockContract.sol/MockContract.json";
 
 // utils
-import { getTransactionEta, getExpectedContractAddress, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
+import { getTransactionEta, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
 import { MockContract } from "../../typechain/MockContract";
 
 const { deployContract } = waffle;
@@ -26,7 +26,6 @@ describe("Unit tests - Gnosis scenario", function () {
   let walletSigner2: User;
   let multisigDeployer: User;
   let executor: User;
-  let expectedRolManagerContractAddress: string;
   let gnosisSafeWallet: Contract;
 
   let timelock: Timelock;
@@ -69,19 +68,12 @@ describe("Unit tests - Gnosis scenario", function () {
     // deploy gnosisSafe wallet
     gnosisSafeWallet = await generateMultisigWallet(walletSigners, 1, multisigDeployer);
 
-    // Get RolManager contract expected deploy address
-    expectedRolManagerContractAddress = await getExpectedContractAddress(admin);
+    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
 
     // contract deployments
-    timelock = (await deployContract(admin.signer, TimelockArtifact, [
-      expectedRolManagerContractAddress,
-      timelockDelay,
-    ])) as Timelock;
+    timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [
-      timelock.address,
-      admin.address,
-    ])) as RolManager;
+    await rolManager.setTimelock(timelock.address);
 
     mockContract = (await deployContract(admin.signer, MockContractArtifact, [])) as MockContract;
     // contract roles

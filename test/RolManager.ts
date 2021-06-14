@@ -12,8 +12,7 @@ import RolManagerArtifact from "../artifacts/contracts/RolManager.sol/RolManager
 import TimelockArtifact from "../artifacts/contracts/Timelock.sol/Timelock.json";
 
 // utils
-import { mineBlockAtTimestamp, getTransactionEta, getExpectedContractAddress } from "./utils";
-
+import { mineBlockAtTimestamp, getTransactionEta } from "./utils";
 const { deployContract } = waffle;
 
 describe("RolManager - Unit tests", function () {
@@ -25,7 +24,6 @@ describe("RolManager - Unit tests", function () {
   let executer: User;
   let canceler: User;
   let proposedAdminAddress: string;
-  let expectedRolManagerContractAddress: string;
 
   let timelock: Timelock;
   let rolManager: RolManager;
@@ -60,19 +58,13 @@ describe("RolManager - Unit tests", function () {
 
     proposedAdminAddress = await signers[3].getAddress();
 
-    // Get RolManager contract expected deploy address
-    expectedRolManagerContractAddress = await getExpectedContractAddress(admin);
-
     // contract deployments
-    timelock = (await deployContract(admin.signer, TimelockArtifact, [
-      expectedRolManagerContractAddress,
-      timelockDelay,
-    ])) as Timelock;
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [
-      timelock.address,
-      admin.address,
-    ])) as RolManager;
+    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
+
+    timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
+
+    await rolManager.setTimelock(timelock.address);
 
     // contract roles
     proposerRole = await rolManager.PROPOSER_ROLE();

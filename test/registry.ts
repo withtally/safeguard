@@ -42,19 +42,18 @@ describe("Registry", () => {
 
   it(`Should register ${randomNum} failSafes`, async () => {
     for (let i = 0; i < randomNum; i++) {
-      let res = await factory.connect(admin).createFailSafe(40);
+      let res = await factory.connect(admin).createFailSafe(40, "My failSafe");
       const txReceipt = await res.wait();
 
       const resFailSafesCount = await registry.getFailSafeCount();
       const failSafeAt = await registry.getFailSafe(i);
 
       expect(resFailSafesCount).to.be.eq(i + 1);
-      const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address)");
+      const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address,string)");
       expect(event.args.rolManagerAddress, "Invalid failSafe address").to.be.eq(failSafeAt);
 
       res = await registry.failSafeVersion(failSafeAt);
       expect(res, "Invalid failSafe version").to.be.eq(FAILSAFE_VERSION);
-
       const failSafeAtIndex = await registry.getFailSafe(resFailSafesCount - 1);
       expect(failSafeAtIndex, "Invalid failSafe at index").to.be.eq(failSafeAt);
     }
@@ -68,10 +67,10 @@ describe("Registry", () => {
     let failSafe: RolManager;
 
     beforeEach(async () => {
-      const res = await factory.connect(admin).createFailSafe(40);
+      const res = await factory.connect(admin).createFailSafe(40, "My failSafe");
       const txReceipt = await res.wait();
 
-      const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address)");
+      const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address,string)");
       const newFailSafeAddress = event.args.rolManagerAddress;
 
       failSafe = (await ethers.getContractAt("RolManager", newFailSafeAddress)) as RolManager;
