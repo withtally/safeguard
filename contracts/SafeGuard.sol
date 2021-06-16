@@ -4,12 +4,12 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "./ITimelock.sol";
 import "hardhat/console.sol";
 
-contract RolManager is AccessControlEnumerable {
+contract SafeGuard is AccessControlEnumerable {
 
     // Request info event
     event QueueTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint eta, string description);
 
-    bytes32 public constant ROLMANAGER_ADMIN_ROLE = keccak256("ROLMANAGER_ADMIN_ROLE");
+    bytes32 public constant SAFEGUARD_ADMIN_ROLE = keccak256("SAFEGUARD_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
     bytes32 public constant CANCELER_ROLE = keccak256("CANCELER_ROLE");
@@ -22,13 +22,13 @@ contract RolManager is AccessControlEnumerable {
      * @dev Initializes the contract with a given Timelock address and administrator address.
      */
     constructor (address _admin, bytes32[] memory roles, address[] memory rolesAssignees) {
-        require(roles.length == rolesAssignees.length, "RolManager::constructor: roles assignment arity mismatch");
+        require(roles.length == rolesAssignees.length, "SafeGuard::constructor: roles assignment arity mismatch");
         // set roles administrator
-        _setRoleAdmin(ROLMANAGER_ADMIN_ROLE, ROLMANAGER_ADMIN_ROLE);
-        _setRoleAdmin(PROPOSER_ROLE, ROLMANAGER_ADMIN_ROLE);
-        _setRoleAdmin(EXECUTOR_ROLE, ROLMANAGER_ADMIN_ROLE);
-        _setRoleAdmin(CANCELER_ROLE, ROLMANAGER_ADMIN_ROLE);
-        _setRoleAdmin(CREATOR_ROLE, ROLMANAGER_ADMIN_ROLE);
+        _setRoleAdmin(SAFEGUARD_ADMIN_ROLE, SAFEGUARD_ADMIN_ROLE);
+        _setRoleAdmin(PROPOSER_ROLE, SAFEGUARD_ADMIN_ROLE);
+        _setRoleAdmin(EXECUTOR_ROLE, SAFEGUARD_ADMIN_ROLE);
+        _setRoleAdmin(CANCELER_ROLE, SAFEGUARD_ADMIN_ROLE);
+        _setRoleAdmin(CREATOR_ROLE, SAFEGUARD_ADMIN_ROLE);
 
         // assign roles 
         for (uint i = 0; i < roles.length; i++) {
@@ -36,7 +36,7 @@ contract RolManager is AccessControlEnumerable {
         }
 
         // set admin rol to an address
-        _setupRole(ROLMANAGER_ADMIN_ROLE, _admin);
+        _setupRole(SAFEGUARD_ADMIN_ROLE, _admin);
         _setupRole(CREATOR_ROLE, msg.sender);
     }
 
@@ -44,7 +44,7 @@ contract RolManager is AccessControlEnumerable {
      * @dev Modifier to make a function callable just by a certain role.
      */
     modifier justByRole(bytes32 role) {
-        require(hasRole(role, _msgSender()), "RolManager: sender requires permission");
+        require(hasRole(role, _msgSender()), "SafeGuard: sender requires permission");
         _;
     }
 
@@ -53,7 +53,7 @@ contract RolManager is AccessControlEnumerable {
      * @param _timelock The address of the timelock contract
      */
     function setTimelock(address _timelock) public justByRole(CREATOR_ROLE) {
-        require(address(timelock) == address(0), "RolManager::setTimelock: Timelock address already defined");
+        require(address(timelock) == address(0), "SafeGuard::setTimelock: Timelock address already defined");
         // set timelock address
         timelock = ITimelock(_timelock);
     }
@@ -71,17 +71,17 @@ contract RolManager is AccessControlEnumerable {
 
     function executeTransaction(address target, uint256 _value, string memory signature, bytes memory data, uint256 eta) public payable justByRole(EXECUTOR_ROLE) {
         bytes32 txHash = keccak256(abi.encode(target, _value, signature, data, eta));
-        require(timelock.queuedTransactions(txHash), "RolManager::executeTransaction: transaction should be queued");
+        require(timelock.queuedTransactions(txHash), "SafeGuard::executeTransaction: transaction should be queued");
         timelock.executeTransaction{value: _value, gas: gasleft()}(target, _value, signature, data, eta);
     }
 
     function _queueTimelockTransaction(bytes32 txHash, address target, uint256 value, string memory signature, bytes memory data, uint256 eta) private {
-        require(!timelock.queuedTransactions(txHash), "RolManager::queueTransaction: transaction already queued at eta");
+        require(!timelock.queuedTransactions(txHash), "SafeGuard::queueTransaction: transaction already queued at eta");
         timelock.queueTransaction(target, value, signature, data, eta);
     }
 
     function _cancelTimelockTransaction(bytes32 txHash, address target, uint256 value, string memory signature, bytes memory data, uint256 eta) private {
-        require(timelock.queuedTransactions(txHash), "RolManager::cancelTransaction: transaction should be queued");
+        require(timelock.queuedTransactions(txHash), "SafeGuard::cancelTransaction: transaction should be queued");
         timelock.cancelTransaction(target, value, signature, data, eta);
     }
 }

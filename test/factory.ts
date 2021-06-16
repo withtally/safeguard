@@ -4,7 +4,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from "chai";
 
 // types
-import { RolManager } from "../typechain";
+import { SafeGuard } from "../typechain";
 
 // utils
 import { parseEvent } from "./utils";
@@ -25,17 +25,17 @@ describe("Factory", () => {
     registry = await Registry.deploy();
     await registry.deployed();
 
-    const Factory = await ethers.getContractFactory("RolManagerFactory");
+    const Factory = await ethers.getContractFactory("SafeGuardFactory");
     factory = await Factory.deploy(registry.address);
     await factory.deployed();
   });
 
-  it("Should create RolManager", async () => {
+  it("Should create SafeGuard", async () => {
     const res = await factory
       .connect(admin)
-      .createFailSafe(
+      .createSafeGuard(
         40,
-        "My failSafe",
+        "My safeGuard",
         admin.address,
         [
           "0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1",
@@ -46,34 +46,34 @@ describe("Factory", () => {
       );
     const txReceipt = await res.wait();
 
-    const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address,string)");
+    const event = parseEvent(txReceipt.events, "SafeGuardCreated(address,address,address,string)");
     expect(event, "no event emitted").to.be.not.null;
 
-    const newRolManager = (await ethers.getContractAt("RolManager", event.args.rolManagerAddress)) as RolManager;
-    const adminRole = await newRolManager.ROLMANAGER_ADMIN_ROLE();
-    const proposerRole = await newRolManager.PROPOSER_ROLE();
-    const executerRole = await newRolManager.EXECUTOR_ROLE();
-    const cancelerRole = await newRolManager.CANCELER_ROLE();
+    const newSafeGuard = (await ethers.getContractAt("SafeGuard", event.args.safeGuardAddress)) as SafeGuard;
+    const adminRole = await newSafeGuard.SAFEGUARD_ADMIN_ROLE();
+    const proposerRole = await newSafeGuard.PROPOSER_ROLE();
+    const executerRole = await newSafeGuard.EXECUTOR_ROLE();
+    const cancelerRole = await newSafeGuard.CANCELER_ROLE();
 
-    expect(await newRolManager.hasRole(adminRole, admin.address)).to.be.true;
-    expect(await newRolManager.hasRole(proposerRole, proposer.address)).to.be.true;
-    expect(await newRolManager.hasRole(executerRole, executer.address)).to.be.true;
-    expect(await newRolManager.hasRole(cancelerRole, canceler.address)).to.be.true;
-    expect(await newRolManager.hasRole(adminRole, event.args.admin)).to.be.true;
+    expect(await newSafeGuard.hasRole(adminRole, admin.address)).to.be.true;
+    expect(await newSafeGuard.hasRole(proposerRole, proposer.address)).to.be.true;
+    expect(await newSafeGuard.hasRole(executerRole, executer.address)).to.be.true;
+    expect(await newSafeGuard.hasRole(cancelerRole, canceler.address)).to.be.true;
+    expect(await newSafeGuard.hasRole(adminRole, event.args.admin)).to.be.true;
   });
 
-  it("Should create RolManager and assign roles on creation", async () => {
-    const res = await factory.connect(admin).createFailSafe(40, "My failSafe", admin.address, [], []);
+  it("Should create SafeGuard and assign roles on creation", async () => {
+    const res = await factory.connect(admin).createSafeGuard(40, "My safeGuard", admin.address, [], []);
     const txReceipt = await res.wait();
 
-    const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address,string)");
+    const event = parseEvent(txReceipt.events, "SafeGuardCreated(address,address,address,string)");
     expect(event, "no event emitted").to.be.not.null;
 
-    const newRolManager = (await ethers.getContractAt("RolManager", event.args.rolManagerAddress)) as RolManager;
-    const adminRole = await newRolManager.ROLMANAGER_ADMIN_ROLE();
+    const newSafeGuard = (await ethers.getContractAt("SafeGuard", event.args.safeGuardAddress)) as SafeGuard;
+    const adminRole = await newSafeGuard.SAFEGUARD_ADMIN_ROLE();
 
-    expect(await newRolManager.hasRole(adminRole, admin.address)).to.be.true;
-    expect(await newRolManager.hasRole(adminRole, event.args.admin)).to.be.true;
+    expect(await newSafeGuard.hasRole(adminRole, admin.address)).to.be.true;
+    expect(await newSafeGuard.hasRole(adminRole, event.args.admin)).to.be.true;
   });
 
   it(`Should set registry address`, async () => {

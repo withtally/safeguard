@@ -7,54 +7,54 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./IRegistry.sol";
 
 /**
- *  @title Registry contract storing information about all failSafes deployed
- *  Used for querying and reverse querying available failSafes for a given target+identifier transaction
+ *  @title Registry contract storing information about all safeGuards deployed
+ *  Used for querying and reverse querying available safeGuards for a given target+identifier transaction
  */
 contract Registry is IRegistry {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    /// @notice mapping of failSafes and their version. Version starts from 1
-    mapping(address => uint8) public failSafeVersion;
+    /// @notice mapping of safeGuards and their version. Version starts from 1
+    mapping(address => uint8) public safeGuardVersion;
 
-    EnumerableSet.AddressSet private failSafes;
+    EnumerableSet.AddressSet private safeGuards;
 
-    /// @notice Register event emitted once new failSafe is added to the registry
-    event Register(address indexed failSafe, uint8 version);
+    /// @notice Register event emitted once new safeGuard is added to the registry
+    event Register(address indexed safeGuard, uint8 version);
 
-    /// @notice Register function for adding new failSafe in the registry
-    /// @param failSafe the address of the new FailSafe
-    /// @param version the version of the failSafe
-    function register(address failSafe, uint8 version) external override {
+    /// @notice Register function for adding new safeGuard in the registry
+    /// @param safeGuard the address of the new SafeGuard
+    /// @param version the version of the safeGuard
+    function register(address safeGuard, uint8 version) external override {
         require(version != 0, "Registry: Invalid version");
         require(
-            !failSafes.contains(failSafe),
-            "Registry: FailSafe already registered"
+            !safeGuards.contains(safeGuard),
+            "Registry: SafeGuard already registered"
         );
 
-        failSafes.add(failSafe);
-        failSafeVersion[failSafe] = version;
+        safeGuards.add(safeGuard);
+        safeGuardVersion[safeGuard] = version;
 
-        emit Register(failSafe, version);
+        emit Register(safeGuard, version);
     }
 
     /**
-     * @notice Returns the failSafe address by index
-     * @param index the index of the failSafe in the set of failSafes
+     * @notice Returns the safeGuard address by index
+     * @param index the index of the safeGuard in the set of safeGuards
      */
-    function getFailSafe(uint256 index)
+    function getSafeGuard(uint256 index)
         external
         view
         override
         returns (address)
     {
-        require(index < failSafes.length(), "Registry: Invalid index");
+        require(index < safeGuards.length(), "Registry: Invalid index");
 
-        return failSafes.at(index);
+        return safeGuards.at(index);
     }
 
-    /// @notice Returns the count of all unique failSafes
-    function getFailSafeCount() external view override returns (uint256) {
-        return failSafes.length();
+    /// @notice Returns the count of all unique safeGuards
+    function getSafeGuardCount() external view override returns (uint256) {
+        return safeGuards.length();
     }
 
 
