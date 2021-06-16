@@ -7,7 +7,7 @@ import "hardhat/console.sol";
 contract SafeGuard is AccessControlEnumerable {
 
     // Request info event
-    event QueueTransaction(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint eta, string description);
+    event QueueTransactionWithDescription(bytes32 indexed txHash, address indexed target, uint value, string signature, bytes data, uint eta, string description);
 
     bytes32 public constant SAFEGUARD_ADMIN_ROLE = keccak256("SAFEGUARD_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
@@ -58,10 +58,15 @@ contract SafeGuard is AccessControlEnumerable {
         timelock = ITimelock(_timelock);
     }
 
-    function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta, string memory description) public justByRole(PROPOSER_ROLE) {
+    function queueTransaction(address target, uint256 value, string memory signature, bytes memory data, uint256 eta) public justByRole(PROPOSER_ROLE) {
         bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
         _queueTimelockTransaction(txHash, target, value, signature, data, eta);
-        emit QueueTransaction(txHash, target, value, signature, data, eta, description);
+    }
+
+    function queueTransactionWithDescription(address target, uint256 value, string memory signature, bytes memory data, uint256 eta, string memory description) public justByRole(PROPOSER_ROLE) {
+        bytes32 txHash = keccak256(abi.encode(target, value, signature, data, eta));
+        _queueTimelockTransaction(txHash, target, value, signature, data, eta);
+        emit QueueTransactionWithDescription(txHash, target, value, signature, data, eta, description);
     }
 
     function cancelTransaction(address target, uint value, string memory signature, bytes memory data, uint eta) public justByRole(CANCELER_ROLE) {

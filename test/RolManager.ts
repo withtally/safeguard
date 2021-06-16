@@ -144,7 +144,7 @@ describe("SafeGuard - Unit tests", function () {
     it("should not be able to queue transaction", async function () {
       eta = await getTransactionEta(timelockDelay);
 
-      await expect(SafeGuard.queueTransaction(target, value, signature, callData, eta, "")).to.be.revertedWith(
+      await expect(SafeGuard.queueTransaction(target, value, signature, callData, eta)).to.be.revertedWith(
         REQUIRES_PERMISSION,
       );
     });
@@ -155,7 +155,7 @@ describe("SafeGuard - Unit tests", function () {
       eta = await getTransactionEta(timelockDelay);
 
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -175,7 +175,7 @@ describe("SafeGuard - Unit tests", function () {
 
     it("should be able to queue transaction to timelock", async function () {
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
     });
 
@@ -188,15 +188,22 @@ describe("SafeGuard - Unit tests", function () {
       );
       const expectedHash = ethers.utils.keccak256(encodedFucnCall);
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, description),
+        SafeGuard.connect(proposer.signer).queueTransactionWithDescription(
+          target,
+          value,
+          signature,
+          callData,
+          eta,
+          description,
+        ),
       )
-        .to.emit(SafeGuard, "QueueTransaction")
+        .to.emit(SafeGuard, "QueueTransactionWithDescription")
         .withArgs(expectedHash, target, value, signature, callData, eta, description);
     });
 
     it("should reject canceling transaction", async function () {
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -206,7 +213,7 @@ describe("SafeGuard - Unit tests", function () {
 
     it("should reject executing transaction", async function () {
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -227,13 +234,13 @@ describe("SafeGuard - Unit tests", function () {
 
     it("should reject queuing transaction", async function () {
       await expect(
-        SafeGuard.connect(executer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(executer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.be.revertedWith(REQUIRES_PERMISSION);
     });
 
     it("should reject canceling transaction", async function () {
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(
@@ -243,7 +250,7 @@ describe("SafeGuard - Unit tests", function () {
 
     it("should be able to execute transaction to timelock", async function () {
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
 
       await mineBlockAtTimestamp(eta);
@@ -271,7 +278,7 @@ describe("SafeGuard - Unit tests", function () {
       eta = await getTransactionEta(timelockDelay);
 
       await expect(
-        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+        SafeGuard.connect(proposer.signer).queueTransaction(target, value, signature, callData, eta),
       ).to.emit(timelock, "QueueTransaction");
 
       await expect(

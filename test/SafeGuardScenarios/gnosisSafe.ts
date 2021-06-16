@@ -112,13 +112,13 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should be able to queue transaction to timelock", async function () {
     await expect(
-      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
   });
 
   it("should reject canceling transaction", async function () {
     await expect(
-      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
@@ -128,7 +128,7 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("should reject executing transaction", async function () {
     await expect(
-      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
@@ -139,7 +139,7 @@ describe("Unit tests - Gnosis scenario", function () {
   it("should be able to execute transaction queued by multisig", async function () {
     await SafeGuard.grantRole(executorRole, executor.address);
     await expect(
-      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);
@@ -175,7 +175,6 @@ describe("Unit tests - Gnosis scenario", function () {
         signature,
         callDataValuedTran,
         eta,
-        "",
       ),
     ).to.emit(timelock, "QueueTransaction");
 
