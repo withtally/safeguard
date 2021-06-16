@@ -42,7 +42,7 @@ describe("Registry", () => {
 
   it(`Should register ${randomNum} failSafes`, async () => {
     for (let i = 0; i < randomNum; i++) {
-      let res = await factory.connect(admin).createFailSafe(40, "My failSafe");
+      let res = await factory.connect(admin).createFailSafe(40, "My failSafe", admin.address, [], []);
       const txReceipt = await res.wait();
 
       const resFailSafesCount = await registry.getFailSafeCount();
@@ -67,7 +67,7 @@ describe("Registry", () => {
     let failSafe: RolManager;
 
     beforeEach(async () => {
-      const res = await factory.connect(admin).createFailSafe(40, "My failSafe");
+      const res = await factory.connect(admin).createFailSafe(40, "My failSafe", admin.address, [], []);
       const txReceipt = await res.wait();
 
       const event = parseEvent(txReceipt.events, "RolManagerCreated(address,address,address,string)");

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 
 import "./IRegistry.sol";
 import "./RolManager.sol";
-import "./Timelock.sol";
+import "./mocks/Timelock.sol";
 
 /**
  *  @title RolManagerFactory - factory contract for deploying rolManager contracts
@@ -31,9 +31,9 @@ contract RolManagerFactory {
     /**
      * @notice Creates new instance of a FailSafe contract
      */
-    function createFailSafe(uint delay_, string memory safeName) external returns (address) {
-        
-        RolManager rolManager = new RolManager(msg.sender);
+    function createFailSafe(uint delay_, string memory safeName, address admin, bytes32[] memory roles, address[] memory rolesAssignees) external returns (address) {
+        require(roles.length == rolesAssignees.length, "RolManagerFactory::create: roles assignment arity mismatch");
+        RolManager rolManager = new RolManager(admin, roles, rolesAssignees);
         Timelock timelock = new Timelock(address(rolManager), delay_);
         rolManager.setTimelock(address(timelock));
 

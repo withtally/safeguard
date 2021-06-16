@@ -9,12 +9,15 @@ import { User } from "../types";
 
 // contract artifacts
 import RolManagerArtifact from "../../artifacts/contracts/RolManager.sol/RolManager.json";
-import TimelockArtifact from "../../artifacts/contracts/Timelock.sol/Timelock.json";
+import TimelockArtifact from "../../artifacts/contracts/mocks/Timelock.sol/Timelock.json";
 import MockContractArtifact from "../../artifacts/contracts/mocks/MockContract.sol/MockContract.json";
 
 // utils
 import { getTransactionEta, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
 import { MockContract } from "../../typechain/MockContract";
+
+// constants
+import { REQUIRES_PERMISSION } from "../constants/error-messages.json";
 
 const { deployContract } = waffle;
 
@@ -68,7 +71,7 @@ describe("Unit tests - Gnosis scenario", function () {
     // deploy gnosisSafe wallet
     gnosisSafeWallet = await generateMultisigWallet(walletSigners, 1, multisigDeployer);
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
+    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address, [], []])) as RolManager;
 
     // contract deployments
     timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
@@ -120,7 +123,7 @@ describe("Unit tests - Gnosis scenario", function () {
 
     await expect(
       rolManager.connect(multisigDeployer.signer).cancelTransaction(target, value, signature, callData, eta),
-    ).to.be.revertedWith("RolManager: sender requires permission");
+    ).to.be.revertedWith(REQUIRES_PERMISSION);
   });
 
   it("should reject executing transaction", async function () {
@@ -130,7 +133,7 @@ describe("Unit tests - Gnosis scenario", function () {
 
     await expect(
       rolManager.connect(multisigDeployer.signer).executeTransaction(target, value, signature, callData, eta),
-    ).to.be.revertedWith("RolManager: sender requires permission");
+    ).to.be.revertedWith(REQUIRES_PERMISSION);
   });
 
   it("should be able to execute transaction queued by multisig", async function () {

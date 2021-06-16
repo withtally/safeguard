@@ -13,6 +13,7 @@ contract RolManager is AccessControlEnumerable {
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
     bytes32 public constant CANCELER_ROLE = keccak256("CANCELER_ROLE");
+    bytes32 public constant CREATOR_ROLE = keccak256("CREATOR_ROLE");
 
     ///@dev The address of the Timelock
     ITimelock public timelock;
@@ -20,15 +21,23 @@ contract RolManager is AccessControlEnumerable {
     /**
      * @dev Initializes the contract with a given Timelock address and administrator address.
      */
-    constructor (address _admin) {
+    constructor (address _admin, bytes32[] memory roles, address[] memory rolesAssignees) {
+        require(roles.length == rolesAssignees.length, "RolManager::constructor: roles assignment arity mismatch");
         // set roles administrator
         _setRoleAdmin(ROLMANAGER_ADMIN_ROLE, ROLMANAGER_ADMIN_ROLE);
         _setRoleAdmin(PROPOSER_ROLE, ROLMANAGER_ADMIN_ROLE);
         _setRoleAdmin(EXECUTOR_ROLE, ROLMANAGER_ADMIN_ROLE);
         _setRoleAdmin(CANCELER_ROLE, ROLMANAGER_ADMIN_ROLE);
+        _setRoleAdmin(CREATOR_ROLE, ROLMANAGER_ADMIN_ROLE);
+
+        // assign roles 
+        for (uint i = 0; i < roles.length; i++) {
+            _setupRole(roles[i], rolesAssignees[i]);
+        }
 
         // set admin rol to an address
         _setupRole(ROLMANAGER_ADMIN_ROLE, _admin);
+        _setupRole(CREATOR_ROLE, msg.sender);
     }
 
     /**
@@ -39,8 +48,12 @@ contract RolManager is AccessControlEnumerable {
         _;
     }
 
-    function setTimelock(address _timelock) public {
-        require(address(timelock) == address(0), "timelock already added");
+    /**
+     * @notice Sets the timelock address this safeGuard contract is gonna use
+     * @param _timelock The address of the timelock contract
+     */
+    function setTimelock(address _timelock) public justByRole(CREATOR_ROLE) {
+        require(address(timelock) == address(0), "RolManager::setTimelock: Timelock address already defined");
         // set timelock address
         timelock = ITimelock(_timelock);
     }

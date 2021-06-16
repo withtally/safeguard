@@ -9,10 +9,14 @@ import { User } from "./types";
 
 // contract artifacts
 import RolManagerArtifact from "../artifacts/contracts/RolManager.sol/RolManager.json";
-import TimelockArtifact from "../artifacts/contracts/Timelock.sol/Timelock.json";
+import TimelockArtifact from "../artifacts/contracts/mocks/Timelock.sol/Timelock.json";
 
 // utils
 import { mineBlockAtTimestamp, getTransactionEta } from "./utils";
+
+// constants
+import { REQUIRES_PERMISSION, TIMELOCK_ALREADY_DEFINED } from "./constants/error-messages.json";
+
 const { deployContract } = waffle;
 
 describe("RolManager - Unit tests", function () {
@@ -23,13 +27,16 @@ describe("RolManager - Unit tests", function () {
   let proposer: User;
   let executer: User;
   let canceler: User;
+  let proposerDefinedOnCreation: User;
   let proposedAdminAddress: string;
 
   let timelock: Timelock;
   let rolManager: RolManager;
+  let adminRole: string;
   let proposerRole: string;
   let executerRole: string;
   let cancelerRole: string;
+  let creatorRole: string;
 
   let target: string;
   let value: BigNumberish;
@@ -55,18 +62,26 @@ describe("RolManager - Unit tests", function () {
       signer: signers[3],
       address: await signers[3].getAddress(),
     };
+    proposerDefinedOnCreation = {
+      signer: signers[4],
+      address: await signers[4].getAddress(),
+    };
 
     proposedAdminAddress = await signers[3].getAddress();
 
     // contract deployments
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
+    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [
+      admin.address,
+      ["0xb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc1"],
+      [proposerDefinedOnCreation.address],
+    ])) as RolManager;
 
     timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
 
-    await rolManager.setTimelock(timelock.address);
-
     // contract roles
+    adminRole = await rolManager.ROLMANAGER_ADMIN_ROLE();
+    creatorRole = await rolManager.CREATOR_ROLE();
     proposerRole = await rolManager.PROPOSER_ROLE();
     executerRole = await rolManager.EXECUTOR_ROLE();
     cancelerRole = await rolManager.CANCELER_ROLE();
@@ -83,10 +98,30 @@ describe("RolManager - Unit tests", function () {
   it("successfully deploys", async function () {
     expect(ethers.utils.isAddress(await timelock.address)).to.be.true;
     expect(ethers.utils.isAddress(await rolManager.address)).to.be.true;
+    expect(await rolManager.hasRole(adminRole, admin.address)).to.be.true;
+    expect(await rolManager.hasRole(proposerRole, proposerDefinedOnCreation.address)).to.be.true;
+    expect(await rolManager.hasRole(creatorRole, admin.address)).to.be.true;
   });
 
   it("should be timelock admin", async function () {
     expect(await timelock.admin()).to.be.eq(rolManager.address);
+  });
+
+  describe("Creator", function () {
+    it("should be able to set timelock address", async function () {
+      await rolManager.setTimelock(timelock.address);
+      expect(await rolManager.timelock()).to.be.eq(timelock.address);
+    });
+
+    it("should not be able to set timelock address if is not the creator", async function () {
+      await expect(rolManager.connect(proposer.signer).setTimelock(timelock.address)).to.be.revertedWith(
+        REQUIRES_PERMISSION,
+      );
+    });
+
+    it("should not be able to set timelock address if there's one defined", async function () {
+      await expect(rolManager.setTimelock(timelock.address)).to.be.revertedWith(TIMELOCK_ALREADY_DEFINED);
+    });
   });
 
   describe("Admin", function () {
@@ -94,8 +129,8 @@ describe("RolManager - Unit tests", function () {
       await rolManager.grantRole(proposerRole, proposer.address);
       expect(await rolManager.hasRole(proposerRole, proposer.address)).to.be.true;
       // check enumerable list available
-      expect(await rolManager.getRoleMemberCount(proposerRole)).to.be.eq(1);
-      expect(await rolManager.getRoleMember(proposerRole, 0)).to.be.eq(proposer.address);
+      expect(await rolManager.getRoleMemberCount(proposerRole)).to.be.eq(2);
+      expect(await rolManager.getRoleMember(proposerRole, 1)).to.be.eq(proposer.address);
     });
 
     it("should be able to revoke role", async function () {
@@ -110,7 +145,7 @@ describe("RolManager - Unit tests", function () {
       eta = await getTransactionEta(timelockDelay);
 
       await expect(rolManager.queueTransaction(target, value, signature, callData, eta, "")).to.be.revertedWith(
-        "RolManager: sender requires permission",
+        REQUIRES_PERMISSION,
       );
     });
 
@@ -125,7 +160,7 @@ describe("RolManager - Unit tests", function () {
 
       await expect(
         rolManager.connect(admin.signer).executeTransaction(target, value, signature, callData, eta),
-      ).to.be.revertedWith("RolManager: sender requires permission");
+      ).to.be.revertedWith(REQUIRES_PERMISSION);
     });
   });
 
@@ -166,7 +201,7 @@ describe("RolManager - Unit tests", function () {
 
       await expect(
         rolManager.connect(proposer.signer).cancelTransaction(target, value, signature, callData, eta),
-      ).to.be.revertedWith("RolManager: sender requires permission");
+      ).to.be.revertedWith(REQUIRES_PERMISSION);
     });
 
     it("should reject executing transaction", async function () {
@@ -176,7 +211,7 @@ describe("RolManager - Unit tests", function () {
 
       await expect(
         rolManager.connect(proposer.signer).executeTransaction(target, value, signature, callData, eta),
-      ).to.be.revertedWith("RolManager: sender requires permission");
+      ).to.be.revertedWith(REQUIRES_PERMISSION);
     });
   });
 
@@ -193,7 +228,7 @@ describe("RolManager - Unit tests", function () {
     it("should reject queuing transaction", async function () {
       await expect(
         rolManager.connect(executer.signer).queueTransaction(target, value, signature, callData, eta, ""),
-      ).to.be.revertedWith("RolManager: sender requires permission");
+      ).to.be.revertedWith(REQUIRES_PERMISSION);
     });
 
     it("should reject canceling transaction", async function () {
@@ -203,7 +238,7 @@ describe("RolManager - Unit tests", function () {
 
       await expect(
         rolManager.connect(executer.signer).cancelTransaction(target, value, signature, callData, eta),
-      ).to.be.revertedWith("RolManager: sender requires permission");
+      ).to.be.revertedWith(REQUIRES_PERMISSION);
     });
 
     it("should be able to execute transaction to timelock", async function () {

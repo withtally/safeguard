@@ -1,5 +1,7 @@
 {
     "INVALID_FAILSAFE_INDEX": "Registry: Invalid index",
     "INVALID_VERSION": "Registry: Invalid version",
-    "ALREADY_REGISTERED": "Registry: FailSafe already registered"
+    "ALREADY_REGISTERED": "Registry: FailSafe already registered",
+    "REQUIRES_PERMISSION": "RolManager: sender requires permission",
+    "TIMELOCK_ALREADY_DEFINED": "RolManager::setTimelock: Timelock address already defined"
 }
