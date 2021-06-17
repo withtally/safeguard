@@ -11,7 +11,7 @@ dotenvConfig({ path: resolve(__dirname, "./.env") });
 async function main(): Promise<void> {
   if (!process.env.METAMASK_ADDRESS) {
     return console.log("Please set your METAMASK_ADDRESS in a .env file");
-  } 
+  }
   const metamaskAddress = process.env.METAMASK_ADDRESS;
   const safeAddress = process.env.SAFE_ADDRESS;
   const timelockDelay = 300; // 5 minutes
@@ -25,15 +25,15 @@ async function main(): Promise<void> {
     address: metamaskAddress,
   };
 
-  // Get RolManager contract expected deploy address
-  const expectedRolManagerContractAddress = await getExpectedContractAddress(currentSignerUser);
+  // Get SafeGuard contract expected deploy address
+  const expectedSafeGuardContractAddress = await getExpectedContractAddress(currentSignerUser);
 
-  const timelock: Contract = await Timelock.deploy(expectedRolManagerContractAddress, timelockDelay);
+  const timelock: Contract = await Timelock.deploy(expectedSafeGuardContractAddress, timelockDelay);
   await timelock.deployed();
 
-  const RolManager: ContractFactory = await ethers.getContractFactory("RolManager");
-  const rolManager: Contract = await RolManager.deploy(timelock.address, safeAddress);
-  await rolManager.deployed();
+  const SafeGuard: ContractFactory = await ethers.getContractFactory("SafeGuard");
+  const SafeGuard: Contract = await SafeGuard.deploy(timelock.address, safeAddress);
+  await SafeGuard.deployed();
 
   const Token: ContractFactory = await ethers.getContractFactory("Comp");
   const token: Contract = await Token.deploy(safeAddress);
@@ -41,7 +41,7 @@ async function main(): Promise<void> {
 
   console.log("Contracts deployed to: ", {
     timelock: timelock.address,
-    rolManager: rolManager.address,
+    SafeGuard: SafeGuard.address,
     token: token.address,
   });
 }

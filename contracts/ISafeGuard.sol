@@ -1,9 +1,10 @@
 pragma solidity ^0.8.0;
 
 /**
- * @dev External interface of RolManager declared to support ERC165 detection.
+ * @dev External interface of SafeGuard declared to support ERC165 detection.
  */
-interface IRolManager {
+interface ISafeGuard {
+    function setTimelock(address _timelock) external;
     function queueTransaction(
         address target,
         uint256 value,

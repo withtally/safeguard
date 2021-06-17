@@ -42,7 +42,7 @@ if (!process.env.INFURA_API_KEY) {
 function createTestnetConfig(network: keyof typeof chainIds): NetworkUserConfig {
   const url: string = "https://" + network + ".infura.io/v3/" + infuraApiKey;
   return {
-    accounts: [`0x${process.env.RINKEBY_PRIVATE_KEY}`],
+    accounts: [`0x${process.env.DEPLOYER_WALLET_PRIVATE_KEY}`],
     chainId: chainIds[network],
     url,
   };
@@ -67,6 +67,7 @@ const config: HardhatUserConfig = {
     kovan: createTestnetConfig("kovan"),
     rinkeby: createTestnetConfig("rinkeby"),
     ropsten: createTestnetConfig("ropsten"),
+    mainnet: createTestnetConfig("mainnet"),
   },
   paths: {
     artifacts: "./artifacts",

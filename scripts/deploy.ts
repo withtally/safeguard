@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   const registry: Contract = await Registry.deploy();
   await registry.deployed();
 
-  const Factory: ContractFactory = await ethers.getContractFactory("RolManagerFactory");
+  const Factory: ContractFactory = await ethers.getContractFactory("SafeGuardFactory");
   const factory: Contract = await Factory.deploy(registry.address);
   await factory.deployed();
 

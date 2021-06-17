@@ -4,17 +4,20 @@ import { BigNumberish, Contract } from "ethers";
 import { expect } from "chai";
 
 // types
-import { Timelock, RolManager } from "../../typechain";
+import { Timelock, SafeGuard } from "../../typechain";
 import { User } from "../types";
 
 // contract artifacts
-import RolManagerArtifact from "../../artifacts/contracts/RolManager.sol/RolManager.json";
-import TimelockArtifact from "../../artifacts/contracts/Timelock.sol/Timelock.json";
+import SafeGuardArtifact from "../../artifacts/contracts/SafeGuard.sol/SafeGuard.json";
+import TimelockArtifact from "../../artifacts/contracts/mocks/Timelock.sol/Timelock.json";
 import MockContractArtifact from "../../artifacts/contracts/mocks/MockContract.sol/MockContract.json";
 
 // utils
 import { getTransactionEta, generateMultisigWallet, mineBlockAtTimestamp } from "../utils";
 import { MockContract } from "../../typechain/MockContract";
+
+// constants
+import { REQUIRES_PERMISSION } from "../constants/error-messages.json";
 
 const { deployContract } = waffle;
 
@@ -29,7 +32,7 @@ describe("Unit tests - Gnosis scenario", function () {
   let gnosisSafeWallet: Contract;
 
   let timelock: Timelock;
-  let rolManager: RolManager;
+  let SafeGuard: SafeGuard;
   let mockContract: MockContract;
   let proposerRole: string;
   let executorRole: string;
@@ -68,20 +71,20 @@ describe("Unit tests - Gnosis scenario", function () {
     // deploy gnosisSafe wallet
     gnosisSafeWallet = await generateMultisigWallet(walletSigners, 1, multisigDeployer);
 
-    rolManager = (await deployContract(admin.signer, RolManagerArtifact, [admin.address])) as RolManager;
+    SafeGuard = (await deployContract(admin.signer, SafeGuardArtifact, [admin.address, [], []])) as SafeGuard;
 
     // contract deployments
-    timelock = (await deployContract(admin.signer, TimelockArtifact, [rolManager.address, timelockDelay])) as Timelock;
+    timelock = (await deployContract(admin.signer, TimelockArtifact, [SafeGuard.address, timelockDelay])) as Timelock;
 
-    await rolManager.setTimelock(timelock.address);
+    await SafeGuard.setTimelock(timelock.address);
 
     mockContract = (await deployContract(admin.signer, MockContractArtifact, [])) as MockContract;
     // contract roles
-    proposerRole = await rolManager.PROPOSER_ROLE();
-    executorRole = await rolManager.EXECUTOR_ROLE();
+    proposerRole = await SafeGuard.PROPOSER_ROLE();
+    executorRole = await SafeGuard.EXECUTOR_ROLE();
 
     // give proposer role to multisig
-    await rolManager.grantRole(proposerRole, multisigDeployer.address);
+    await SafeGuard.grantRole(proposerRole, multisigDeployer.address);
 
     // define transaction data
     target = timelock.address;
@@ -99,59 +102,59 @@ describe("Unit tests - Gnosis scenario", function () {
 
   it("successfully deploys", async function () {
     expect(ethers.utils.isAddress(await timelock.address)).to.be.true;
-    expect(ethers.utils.isAddress(await rolManager.address)).to.be.true;
+    expect(ethers.utils.isAddress(await SafeGuard.address)).to.be.true;
     expect(ethers.utils.isAddress(await gnosisSafeWallet.address)).to.be.true;
   });
 
   it("should have proposer role", async function () {
-    expect(await rolManager.hasRole(proposerRole, multisigDeployer.address)).to.be.true;
+    expect(await SafeGuard.hasRole(proposerRole, multisigDeployer.address)).to.be.true;
   });
 
   it("should be able to queue transaction to timelock", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
   });
 
   it("should reject canceling transaction", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
-      rolManager.connect(multisigDeployer.signer).cancelTransaction(target, value, signature, callData, eta),
-    ).to.be.revertedWith("RolManager: sender requires permission");
+      SafeGuard.connect(multisigDeployer.signer).cancelTransaction(target, value, signature, callData, eta),
+    ).to.be.revertedWith(REQUIRES_PERMISSION);
   });
 
   it("should reject executing transaction", async function () {
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
 
     await expect(
-      rolManager.connect(multisigDeployer.signer).executeTransaction(target, value, signature, callData, eta),
-    ).to.be.revertedWith("RolManager: sender requires permission");
+      SafeGuard.connect(multisigDeployer.signer).executeTransaction(target, value, signature, callData, eta),
+    ).to.be.revertedWith(REQUIRES_PERMISSION);
   });
 
   it("should be able to execute transaction queued by multisig", async function () {
-    await rolManager.grantRole(executorRole, executor.address);
+    await SafeGuard.grantRole(executorRole, executor.address);
     await expect(
-      rolManager.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(target, value, signature, callData, eta),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);
 
     await expect(
-      rolManager
-        .connect(executor.signer)
-        .executeTransaction(target, value, signature, callData, eta, { gasLimit: 2500000 }),
+      SafeGuard.connect(executor.signer).executeTransaction(target, value, signature, callData, eta, {
+        gasLimit: 2500000,
+      }),
     ).to.emit(timelock, "ExecuteTransaction");
 
     expect(await timelock.pendingAdmin()).to.be.eq(multisigDeployer.address);
   });
 
   it("should be able to execute eth valued transactions", async function () {
-    await rolManager.grantRole(executorRole, executor.address);
+    await SafeGuard.grantRole(executorRole, executor.address);
     const amountToSend = ethers.utils.parseEther("1");
 
     // define transaction data
@@ -166,20 +169,29 @@ describe("Unit tests - Gnosis scenario", function () {
     ]);
 
     await expect(
-      rolManager
-        .connect(multisigDeployer.signer)
-        .queueTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta, ""),
+      SafeGuard.connect(multisigDeployer.signer).queueTransaction(
+        targetValuedTran,
+        valueForValuedTran,
+        signature,
+        callDataValuedTran,
+        eta,
+      ),
     ).to.emit(timelock, "QueueTransaction");
 
     await mineBlockAtTimestamp(eta);
 
     await expect(
-      rolManager
-        .connect(executor.signer)
-        .executeTransaction(targetValuedTran, valueForValuedTran, signature, callDataValuedTran, eta, {
+      SafeGuard.connect(executor.signer).executeTransaction(
+        targetValuedTran,
+        valueForValuedTran,
+        signature,
+        callDataValuedTran,
+        eta,
+        {
           value: amountToSend,
           gasLimit: 2500000,
-        }),
+        },
+      ),
     ).to.emit(timelock, "ExecuteTransaction");
 
     expect(await mockContract.lastReceiver()).to.be.eq(multisigDeployer.address);
