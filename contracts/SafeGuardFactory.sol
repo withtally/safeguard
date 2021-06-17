@@ -39,7 +39,7 @@ contract SafeGuardFactory {
 
         IRegistry(registry).register(address(safeGuard), SAFE_GUARD_VERSION);
 
-        emit SafeGuardCreated(msg.sender, address(safeGuard), address(timelock), safeGuardName);
+        emit SafeGuardCreated(admin, address(safeGuard), address(timelock), safeGuardName);
         return address(safeGuard);
     }
 }

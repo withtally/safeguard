@@ -76,6 +76,7 @@
     "test": "hardhat test",
     "typechain": "hardhat typechain",
     "deploy:rinkeby": "npx hardhat run scripts/fail-safe-deploy.ts --network rinkeby",
-    "deploy-registry:rinkeby": "npx hardhat run scripts/deploy.ts --network rinkeby"
+    "deploy-registry:rinkeby": "npx hardhat run scripts/deploy.ts --network rinkeby",
+    "deploy-registry:mainnet": "npx hardhat run scripts/mainnet-deployment.ts --network mainnet"
   }
 }
