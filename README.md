@@ -1,4 +1,4 @@
-# tally SafeGuard
+# Tally SafeGuard
 
 ## Project Abstract
 
