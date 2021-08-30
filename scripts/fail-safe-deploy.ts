@@ -2,47 +2,54 @@ import { Contract, ContractFactory } from "ethers";
 import { ethers } from "hardhat";
 import { resolve } from "path";
 import { config as dotenvConfig } from "dotenv";
-
-// utils
-import { getExpectedContractAddress } from "../test/utils";
+import {proposerRole, executerRole, cancelerRole} from '../test/constants';
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
 async function main(): Promise<void> {
-  if (!process.env.METAMASK_ADDRESS) {
-    return console.log("Please set your METAMASK_ADDRESS in a .env file");
+  if (!process.env.DEPLOYER_WALLET_PRIVATE_KEY) {
+    return console.log("Please set your DEPLOYER_WALLET_PRIVATE_KEY in a .env file");
   }
-  const metamaskAddress = process.env.METAMASK_ADDRESS;
-  const safeAddress = process.env.SAFE_ADDRESS;
-  const timelockDelay = 300; // 5 minutes
 
-  // We define the timelock contract Factory
-  const Timelock: ContractFactory = await ethers.getContractFactory("Timelock");
+  const [deployer] = await ethers.getSigners();
 
-  // We construct the user with the expected signer
-  const currentSignerUser = {
-    signer: Timelock.signer,
-    address: metamaskAddress,
-  };
+  console.log("Deploying contracts with the account:", deployer.address);
 
-  // Get SafeGuard contract expected deploy address
-  const expectedSafeGuardContractAddress = await getExpectedContractAddress(currentSignerUser);
+  console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  const timelock: Contract = await Timelock.deploy(expectedSafeGuardContractAddress, timelockDelay);
-  await timelock.deployed();
+  // We get the contract to deploy
+  const Registry: ContractFactory = await ethers.getContractFactory("Registry");
+  const registry: Contract = await Registry.deploy();
+  await registry.deployed();
 
-  const SafeGuard: ContractFactory = await ethers.getContractFactory("SafeGuard");
-  const SafeGuard: Contract = await SafeGuard.deploy(timelock.address, safeAddress);
-  await SafeGuard.deployed();
+  const Factory: ContractFactory = await ethers.getContractFactory("SafeGuardFactory");
+  const factory: Contract = await Factory.deploy(registry.address);
+  await factory.deployed();
 
-  const Token: ContractFactory = await ethers.getContractFactory("Comp");
-  const token: Contract = await Token.deploy(safeAddress);
-  await token.deployed();
+  const oneDayTimelock = 86400; // 1 day in seconds
+  const safeGuardDescription = "Sample SafeGuard";
 
+  // sample safeGuard creation using the factory
+  const res = await factory
+    .connect(deployer)
+    .createSafeGuard(
+      oneDayTimelock,
+      safeGuardDescription,
+      process.env.METAMASK_ADDRESS,
+      [proposerRole, executerRole, cancelerRole, ],
+      [
+        process.env.METAMASK_ADDRESS,
+        process.env.METAMASK_ADDRESS,
+        process.env.METAMASK_ADDRESS,
+      ],
+      { gasLimit: 4000000 },
+    );
+
+  await res.wait();
+  
   console.log("Contracts deployed to: ", {
-    timelock: timelock.address,
-    SafeGuard: SafeGuard.address,
-    token: token.address,
+    registry: registry.address,
+    factory: factory.address,
   });
 }
 
