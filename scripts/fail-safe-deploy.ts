@@ -35,7 +35,7 @@ async function main(): Promise<void> {
     .createSafeGuard(
       oneDayTimelock,
       safeGuardDescription,
-      process.env.METAMASK_ADDRESS,
+      process.env.SAFE_ADDRESS,
       [proposerRole, executerRole, cancelerRole, ],
       [
         process.env.METAMASK_ADDRESS,
