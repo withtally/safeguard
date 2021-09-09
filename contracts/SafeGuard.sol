@@ -30,7 +30,7 @@ contract SafeGuard is AccessControlEnumerable {
         _setRoleAdmin(CANCELER_ROLE, SAFEGUARD_ADMIN_ROLE);
         _setRoleAdmin(CREATOR_ROLE, SAFEGUARD_ADMIN_ROLE);
 
-        // assign roles 
+        // assign roles
         for (uint i = 0; i < roles.length; i++) {
             _setupRole(roles[i], rolesAssignees[i]);
         }
