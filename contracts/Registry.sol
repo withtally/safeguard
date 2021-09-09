@@ -18,7 +18,7 @@ contract Registry is IRegistry, AccessControl {
     mapping(address => uint8) public safeGuardVersion;
 
     /// @notice The factory admin role definition
-    bytes32 public constant FACTORY_ADMIN = keccak256("FACTORY_ADMIN");
+    bytes32 public constant REGISTRY_ADMIN = keccak256("REGISTRY_ADMIN");
 
     EnumerableSet.AddressSet private safeGuards;
 
@@ -30,17 +30,17 @@ contract Registry is IRegistry, AccessControl {
      */
     constructor (address _admin) {
         // set roles administrator
-        _setRoleAdmin(FACTORY_ADMIN, FACTORY_ADMIN);
+        _setRoleAdmin(REGISTRY_ADMIN, REGISTRY_ADMIN);
 
         // set admin rol to an address
-        _setupRole(FACTORY_ADMIN, _admin);
+        _setupRole(REGISTRY_ADMIN, _admin);
     }
 
     /// @notice Register function for adding new safeGuard in the registry
     /// @param safeGuard the address of the new SafeGuard
     /// @param version the version of the safeGuard
     function register(address safeGuard, uint8 version) external override {
-        require(hasRole(FACTORY_ADMIN, _msgSender()), "Registry: sender requires permission");
+        require(hasRole(REGISTRY_ADMIN, _msgSender()), "Registry: sender requires permission");
         require(version != 0, "Registry: Invalid version");
         require(
             !safeGuards.contains(safeGuard),
