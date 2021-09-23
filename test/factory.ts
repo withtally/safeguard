@@ -7,11 +7,16 @@ import { expect } from "chai";
 import { SafeGuard } from "../typechain";
 
 // utils
-import { getExpectedContractAddress, parseEvent } from "./utils";
+import { parseEvent, getRandomNum } from "./utils";
+
+// constants
+import { INVALID_FAILSAFE_INDEX } from "./constants/error-messages.json";
+import { SAFEGUARD_VERSION } from "./constants/values.json";
+
+const randomNum = getRandomNum();
 
 describe("Factory", () => {
   let factory: Contract;
-  let registry: Contract;
 
   let admin: SignerWithAddress;
   let proposer: SignerWithAddress;
@@ -21,14 +26,8 @@ describe("Factory", () => {
   beforeEach(async () => {
     [admin, proposer, executer, canceler] = await ethers.getSigners();
 
-    const expectedFactoryAddress = await getExpectedContractAddress(admin)
-
-    const Registry = await ethers.getContractFactory("Registry");
-    registry = await Registry.deploy(expectedFactoryAddress);
-    await registry.deployed();
-
     const Factory = await ethers.getContractFactory("SafeGuardFactory");
-    factory = await Factory.deploy(registry.address);
+    factory = await Factory.deploy();
     await factory.deployed();
   });
 
@@ -78,8 +77,41 @@ describe("Factory", () => {
     expect(await newSafeGuard.hasRole(adminRole, event.args.admin)).to.be.true;
   });
 
-  it(`Should set registry address`, async () => {
-    const res = await factory.registry();
-    expect(res, "Registry not match").to.be.eq(registry.address);
+  it("Should have 0 safeGuards after deployment", async () => {
+    const res = await factory.getSafeGuardCount();
+    expect(res).to.be.eq(0);
+  });
+
+  it(`Should register ${randomNum} safeGuards`, async () => {
+    for (let i = 0; i < randomNum; i++) {
+      let res = await factory.connect(admin).createSafeGuard(40, "My safeGuard", admin.address, [], []);
+      const txReceipt = await res.wait();
+
+      const resSafeGuardsCount = await factory.getSafeGuardCount();
+      const safeGuardAt = await factory.getSafeGuard(i);
+
+      expect(resSafeGuardsCount).to.be.eq(i + 1);
+      const event = parseEvent(txReceipt.events, "SafeGuardCreated(address,address,address,string)");
+      expect(event.args.safeGuardAddress, "Invalid safeGuard address").to.be.eq(safeGuardAt);
+
+      res = await factory.safeGuardVersion(safeGuardAt);
+      expect(res, "Invalid safeGuard version").to.be.eq(SAFEGUARD_VERSION);
+      const safeGuardAtIndex = await factory.getSafeGuard(resSafeGuardsCount - 1);
+      expect(safeGuardAtIndex, "Invalid safeGuard at index").to.be.eq(safeGuardAt);
+    }
+  });
+
+  it("Should revert when getting safeGuard with invalid index", async () => {
+    await expect(factory.getSafeGuard(5)).to.be.revertedWith(INVALID_FAILSAFE_INDEX);
+  });
+
+  it("Should reject create a SafeGuard with roles mismatch", async () => {
+    await expect(factory.connect(admin).createSafeGuard(
+      40, 
+      "My safeGuard", 
+      admin.address, 
+      [], 
+      [admin.address])
+    ).revertedWith("SafeGuardFactory::create: roles assignment arity mismatch");
   });
 });

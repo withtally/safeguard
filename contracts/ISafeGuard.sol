@@ -1,37 +1,53 @@
-pragma solidity ^0.8.0;
+/**
+* SPDX-License-Identifier: MIT
+*/
+
+pragma solidity 0.8.7;
 
 /**
- * @dev External interface of SafeGuard declared to support ERC165 detection.
+ * @dev External interface of SafeGuard.
  */
 interface ISafeGuard {
     function setTimelock(address _timelock) external;
+
+    function hashProposalTx(
+        address _target,
+        uint256 _value,
+        string memory _signature,
+        bytes memory _data,
+        uint256 _eta
+    ) external pure returns (bytes32);
+
     function queueTransaction(
-        address target,
-        uint256 value,
-        string calldata signature,
-        bytes calldata data,
-        uint256 eta
-    ) external returns (bytes32);
+        address _target,
+        uint256 _value,
+        string calldata _signature,
+        bytes calldata _data,
+        uint256 _eta
+    ) external;
+
+    function queueTransactionWithDescription(
+        address _target, 
+        uint256 _value, 
+        string memory _signature, 
+        bytes memory _data,
+        uint256 _eta, 
+        string memory _description
+    ) external;
 
     function cancelTransaction(
-        address target,
-        uint256 value,
-        string calldata signature,
-        bytes calldata data,
-        uint256 eta
+        address _target,
+        uint256 _value,
+        string calldata _signature,
+        bytes calldata _data,
+        uint256 _eta
     ) external;
 
     function executeTransaction(
-        address target,
-        uint256 value,
-        string calldata signature,
-        bytes calldata data,
-        uint256 eta
-    ) external payable returns (bytes memory);
-
-    function grantRole(bytes32 role, address account) external;
-    function revokeRole(bytes32 role, address account) external;
-    function __abdicate() external;
-    function __queueSetTimelockPendingAdmin(address newPendingAdmin, uint eta) external;
-    function __executeSetTimelockPendingAdmin(address newPendingAdmin, uint eta) external;
+        address _target,
+        uint256 _value,
+        string calldata _signature,
+        bytes calldata _data,
+        uint256 _eta
+    ) external payable;
 }
