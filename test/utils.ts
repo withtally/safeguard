@@ -10,7 +10,6 @@ import { User } from "./types";
 
 // constants
 import { Address0 } from "./constants";
-import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 
 export const mineBlockAtTimestamp = async (timestamp: number): Promise<any> => {
   await ethers.provider.send("evm_mine", [timestamp]);
@@ -29,8 +28,8 @@ export const getTransactionEta = async (timelockDelay: number): Promise<number> 
   return transactionEta;
 };
 
-export const getExpectedContractAddress = async (deployer: SignerWithAddress): Promise<string> => {
-  const adminAddressTransactionCount = await deployer.getTransactionCount();
+export const getExpectedContractAddress = async (deployer: User): Promise<string> => {
+  const adminAddressTransactionCount = await deployer.signer.getTransactionCount();
   const expectedContractAddress = ethers.utils.getContractAddress({
     from: deployer.address,
     nonce: adminAddressTransactionCount + 1,

@@ -4,11 +4,12 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-wit
 import { expect } from "chai";
 
 // utils
-import { getExpectedContractAddress, getRandomNum, parseEvent } from "./utils";
+import { getRandomNum, parseEvent } from "./utils";
 
 // constants
-import { INVALID_FAILSAFE_INDEX } from "./constants/error-messages.json";
+import { INVALID_FAILSAFE_INDEX, INVALID_VERSION, ALREADY_REGISTERED } from "./constants/error-messages.json";
 import { SAFEGUARD_VERSION } from "./constants/values.json";
+import { SafeGuard } from "../typechain";
 
 const randomNum = getRandomNum();
 
@@ -21,10 +22,8 @@ describe("Registry", () => {
   beforeEach(async () => {
     [admin] = await ethers.getSigners();
 
-    const expectedFactoryAddress = await getExpectedContractAddress(admin)
-
     const Registry = await ethers.getContractFactory("Registry");
-    registry = await Registry.deploy(expectedFactoryAddress);
+    registry = await Registry.deploy();
     await registry.deployed();
 
     const Factory = await ethers.getContractFactory("SafeGuardFactory");
@@ -32,8 +31,8 @@ describe("Registry", () => {
     await factory.deployed();
   });
 
-  it("Should not allow registering safeGuard if not called from the factory", async () => {
-    await expect(registry.register(admin.address, 1)).to.be.revertedWith('Registry: sender requires permission');
+  it("Should not allow registering safeGuard with version 0", async () => {
+    await expect(registry.register(admin.address, 0)).to.be.revertedWith(INVALID_VERSION);
   });
 
   it("Should have 0 safeGuards after deployment", async () => {
@@ -62,5 +61,23 @@ describe("Registry", () => {
 
   it("Should revert when getting safeGuard with invalid index", async () => {
     await expect(registry.getSafeGuard(5)).to.be.revertedWith(INVALID_FAILSAFE_INDEX);
+  });
+
+  describe("Pre deployed safeGuard", () => {
+    let safeGuard: SafeGuard;
+
+    beforeEach(async () => {
+      const res = await factory.connect(admin).createSafeGuard(40, "My safeGuard", admin.address, [], []);
+      const txReceipt = await res.wait();
+
+      const event = parseEvent(txReceipt.events, "SafeGuardCreated(address,address,address,string)");
+      const newSafeGuardAddress = event.args.safeGuardAddress;
+
+      safeGuard = (await ethers.getContractAt("SafeGuard", newSafeGuardAddress)) as SafeGuard;
+    });
+
+    it("Should not revert when registering already registered safeGuard", async () => {
+      await expect(registry.register(safeGuard.address, 1)).to.be.revertedWith(ALREADY_REGISTERED);
+    });
   });
 });
