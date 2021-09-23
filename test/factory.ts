@@ -7,7 +7,7 @@ import { expect } from "chai";
 import { SafeGuard } from "../typechain";
 
 // utils
-import { getExpectedContractAddress, parseEvent } from "./utils";
+import { parseEvent } from "./utils";
 
 describe("Factory", () => {
   let factory: Contract;
@@ -21,10 +21,8 @@ describe("Factory", () => {
   beforeEach(async () => {
     [admin, proposer, executer, canceler] = await ethers.getSigners();
 
-    const expectedFactoryAddress = await getExpectedContractAddress(admin)
-
     const Registry = await ethers.getContractFactory("Registry");
-    registry = await Registry.deploy(expectedFactoryAddress);
+    registry = await Registry.deploy();
     await registry.deployed();
 
     const Factory = await ethers.getContractFactory("SafeGuardFactory");

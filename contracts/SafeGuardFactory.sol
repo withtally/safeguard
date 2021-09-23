@@ -10,7 +10,6 @@ import "./mocks/Timelock.sol";
  *  @title SafeGuardFactory - factory contract for deploying SafeGuard contracts
  */
 contract SafeGuardFactory {
-
     /// @notice Address of the safeGuard registry
     address public registry;
 
