@@ -1,0 +1,77 @@
+//SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+// pragma experimental ABIEncoderV2;
+
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./IRegistry.sol";
+
+/**
+ *  @title Registry contract storing information about all safeGuards deployed
+ *  Used for querying and reverse querying available safeGuards for a given target+identifier transaction
+ */
+contract Registry is IRegistry, AccessControl {
+    using EnumerableSet for EnumerableSet.AddressSet;
+
+    /// @notice mapping of safeGuards and their version. Version starts from 1
+    mapping(address => uint8) public safeGuardVersion;
+
+    /// @notice The factory admin role definition
+    bytes32 public constant REGISTRY_ADMIN = keccak256("REGISTRY_ADMIN");
+
+    EnumerableSet.AddressSet private safeGuards;
+
+    /// @notice Register event emitted once new safeGuard is added to the registry
+    event Register(address indexed safeGuard, uint8 version);
+
+    /**
+     * @dev Initializes the contract with a given admin.
+     */
+    constructor (address _admin) {
+        // set roles administrator
+        _setRoleAdmin(REGISTRY_ADMIN, REGISTRY_ADMIN);
+
+        // set admin rol to an address
+        _setupRole(REGISTRY_ADMIN, _admin);
+    }
+
+    /// @notice Register function for adding new safeGuard in the registry
+    /// @param safeGuard the address of the new SafeGuard
+    /// @param version the version of the safeGuard
+    function register(address safeGuard, uint8 version) external override {
+        require(hasRole(REGISTRY_ADMIN, _msgSender()), "Registry: sender requires permission");
+        require(version != 0, "Registry: Invalid version");
+        require(
+            !safeGuards.contains(safeGuard),
+            "Registry: SafeGuard already registered"
+        );
+
+        safeGuards.add(safeGuard);
+        safeGuardVersion[safeGuard] = version;
+
+        emit Register(safeGuard, version);
+    }
+
+    /**
+     * @notice Returns the safeGuard address by index
+     * @param index the index of the safeGuard in the set of safeGuards
+     */
+    function getSafeGuard(uint256 index)
+        external
+        view
+        override
+        returns (address)
+    {
+        require(index < safeGuards.length(), "Registry: Invalid index");
+
+        return safeGuards.at(index);
+    }
+
+    /// @notice Returns the count of all unique safeGuards
+    function getSafeGuardCount() external view override returns (uint256) {
+        return safeGuards.length();
+    }
+
+
+}

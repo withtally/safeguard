@@ -1,7 +1,7 @@
 {
-    "INVALID_FAILSAFE_INDEX": "SafeGuardFactory:: Invalid index",
-    "INVALID_VERSION": "SafeGuardFactory:: Invalid version",
-    "ALREADY_REGISTERED": "SafeGuardFactory:: SafeGuard already registered",
+    "INVALID_FAILSAFE_INDEX": "Registry: Invalid index",
+    "INVALID_VERSION": "Registry: Invalid version",
+    "ALREADY_REGISTERED": "Registry: SafeGuard already registered",
     "REQUIRES_PERMISSION": "SafeGuard: sender requires permission",
     "TIMELOCK_ALREADY_DEFINED": "SafeGuard::setTimelock: Timelock address already defined"
 }

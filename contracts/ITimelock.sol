@@ -1,12 +1,5 @@
-/**
-* SPDX-License-Identifier: MIT
-*/
+pragma solidity ^0.8.0;
 
-pragma solidity 0.8.7;
-
-/**
- * @dev External interface of Coumpound timelock
- */
 interface ITimelock {
     function delay() external view returns (uint);
     function GRACE_PERIOD() external view returns (uint);
