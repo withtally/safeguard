@@ -1,4 +1,6 @@
-pragma solidity ^0.8.0;
+//SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.7;
 
 /**
  * @dev External interface of SafeGuard declared to support ERC165 detection.
