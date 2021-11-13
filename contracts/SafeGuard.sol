@@ -83,7 +83,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
             _setupRole(_roles[i], _rolesAssignees[i]);
         }
 
-        // set admin role the an defined admin address
+        // set admin role the a defined admin address
         _setupRole(SAFEGUARD_ADMIN_ROLE, _admin);
     }
 
@@ -96,7 +96,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     }
 
     /**
-     * @notice Sets the timelock address this safeGuard contract is gonna use
+     * @notice Sets the timelock address this safeGuard contract is going to use
      * @param _timelock The address of the timelock contract
      */
     function setTimelock(address _timelock) public override onlyOwner {
@@ -110,7 +110,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
+     * @param _data The data required to execute the function
      * @param _eta  the eta on which the transaction will be availiable
      */
     function hashProposalTx(
@@ -128,7 +128,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
+     * @param _data The data required to execute the function
      * @param _eta  the eta on which the transaction will be availiable
      */
     function queueTransaction(
@@ -147,8 +147,9 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
+     * @param _data The data required to execute the function
      * @param _eta  the eta on which the transaction will be availiable
+     * @param _description the description/explanation of the tx to be queued
      */
     function queueTransactionWithDescription(
         address _target,
@@ -167,7 +168,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
+     * @param _data The data required to execute the function
      * @param _eta  the eta on which the transaction will be availiable
      */
     function cancelTransaction(
@@ -188,7 +189,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
+     * @param _data The data required to execute the function
      * @param _eta  the eta on which the transaction will be availiable
      */
     function executeTransaction(
@@ -209,7 +210,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
+     * @param _data The data required to execute the function
      * @param _eta  the eta on which the transaction will be availiable
      */
     function _queueTimelockTransaction(
