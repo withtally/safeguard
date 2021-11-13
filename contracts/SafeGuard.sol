@@ -111,7 +111,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
      * @param _data The data required to execute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _eta  the eta on which the transaction will be available
      */
     function hashProposalTx(
         address _target,
@@ -129,7 +129,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
      * @param _data The data required to execute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _eta  the eta on which the transaction will be available
      */
     function queueTransaction(
         address _target,
@@ -148,7 +148,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
      * @param _data The data required to execute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _eta  the eta on which the transaction will be available
      * @param _description the description/explanation of the tx to be queued
      */
     function queueTransactionWithDescription(
@@ -169,7 +169,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
      * @param _data The data required to execute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _eta  the eta on which the transaction will be available
      */
     function cancelTransaction(
         address _target,
@@ -190,7 +190,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
      * @param _data The data required to execute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _eta  the eta on which the transaction will be available
      */
     function executeTransaction(
         address _target,
@@ -211,7 +211,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
      * @param _data The data required to execute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _eta  the eta on which the transaction will be available
      */
     function _queueTimelockTransaction(
         address _target,
