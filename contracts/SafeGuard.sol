@@ -1,6 +1,6 @@
 /**
-* SPDX-License-Identifier: MIT
-*/
+ * SPDX-License-Identifier: MIT
+ */
 
 pragma solidity 0.8.7;
 
@@ -14,8 +14,8 @@ import "./ISafeGuard.sol";
  */
 contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     /**
-    * @dev events definition
-    */
+     * @dev events definition
+     */
     event CancelTransaction(
         bytes32 indexed txHash,
         address indexed target,
@@ -51,16 +51,16 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     );
 
     /**
-    * @dev Roles definitions
-    */
+     * @dev Roles definitions
+     */
     bytes32 public constant SAFEGUARD_ADMIN_ROLE = keccak256("SAFEGUARD_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
     bytes32 public constant CANCELER_ROLE = keccak256("CANCELER_ROLE");
 
     /**
-    * @dev The address of the Timelock
-    */
+     * @dev The address of the Timelock
+     */
     ITimelock public timelock;
 
     /**
@@ -83,7 +83,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
             _setupRole(_roles[i], _rolesAssignees[i]);
         }
 
-        // set admin role the an defined admin address
+        // set admin role the a defined admin address
         _setupRole(SAFEGUARD_ADMIN_ROLE, _admin);
     }
 
@@ -96,7 +96,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     }
 
     /**
-     * @notice Sets the timelock address this safeGuard contract is gonna use
+     * @notice Sets the timelock address this safeGuard contract is going to use
      * @param _timelock The address of the timelock contract
      */
     function setTimelock(address _timelock) public override onlyOwner {
@@ -110,8 +110,8 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _data The data required to execute the function
+     * @param _eta  the eta on which the transaction will be available
      */
     function hashProposalTx(
         address _target,
@@ -119,7 +119,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
         string memory _signature,
         bytes memory _data,
         uint256 _eta
-    ) public override pure virtual returns (bytes32) {
+    ) public pure virtual override returns (bytes32) {
         return keccak256(abi.encode(_target, _value, _signature, _data, _eta));
     }
 
@@ -128,8 +128,8 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _data The data required to execute the function
+     * @param _eta  the eta on which the transaction will be available
      */
     function queueTransaction(
         address _target,
@@ -147,8 +147,9 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _data The data required to execute the function
+     * @param _eta  the eta on which the transaction will be available
+     * @param _description the description/explanation of the tx to be queued
      */
     function queueTransactionWithDescription(
         address _target,
@@ -167,8 +168,8 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _data The data required to execute the function
+     * @param _eta  the eta on which the transaction will be available
      */
     function cancelTransaction(
         address _target,
@@ -188,8 +189,8 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _data The data required to execute the function
+     * @param _eta  the eta on which the transaction will be available
      */
     function executeTransaction(
         address _target,
@@ -209,8 +210,8 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
      * @param _target The address of the target contract
      * @param _value The value that the transaction needs
      * @param _signature The signature of the function to be executed
-     * @param _data The data required to exeute the function
-     * @param _eta  the eta on which the transaction will be availiable
+     * @param _data The data required to execute the function
+     * @param _eta  the eta on which the transaction will be available
      */
     function _queueTimelockTransaction(
         address _target,

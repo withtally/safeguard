@@ -60,6 +60,7 @@ contract SafeGuardFactory is AccessControl, Ownable {
     /**
      * @notice Returns the safeGuard address by index
      * @param _index the index of the safeGuard in the set of safeGuards
+     * @return the SafeGuard address of the specified index
      */
     function getSafeGuard(uint256 _index) external view returns (address) {
         require(_index < safeGuards.length(), "SafeGuardFactory:: Invalid index");
@@ -69,6 +70,7 @@ contract SafeGuardFactory is AccessControl, Ownable {
 
     /**
      * @notice Returns the count of all unique safeGuards
+     * @return fixed number that represents the lenght of the safeGuards array
      */
     function getSafeGuardCount() external view returns (uint256) {
         return safeGuards.length();
@@ -76,6 +78,12 @@ contract SafeGuardFactory is AccessControl, Ownable {
 
     /**
      * @notice Creates new instance of a SafeGuard contract
+     * @param _delay The amount of time a transaction needs to wait before being executed
+     * @param _safeGuardName The name to identify the new SafeGuard
+     * @param _admin The address of the safeGuard radministrato
+     * @param _roles Initial roles list to assign on the SafeGuard
+     * @param _rolesAssignees  Initial roles assignees on the SafeGuard
+     * @return the address of the newly created SafeGuard
      */
     function createSafeGuard(
         uint256 _delay,
