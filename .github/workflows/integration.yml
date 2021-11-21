@@ -6,6 +6,7 @@ env:
   ETHERSCAN_API_KEY: ${{ secrets.ETH_SCAN_API_KEY }}
   INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
   MNEMONIC: ${{ secrets.MNEMONIC }}
+  DEPLOYER_WALLET_PRIVATE_KEY: ${{ secrets.DEPLOYER_WALLET_PRIVATE_KEY }}
 
 on:
   pull_request:
