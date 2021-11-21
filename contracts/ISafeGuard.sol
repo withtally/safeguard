@@ -1,6 +1,6 @@
 /**
-* SPDX-License-Identifier: MIT
-*/
+ * SPDX-License-Identifier: MIT
+ */
 
 pragma solidity 0.8.7;
 
@@ -27,11 +27,11 @@ interface ISafeGuard {
     ) external;
 
     function queueTransactionWithDescription(
-        address _target, 
-        uint256 _value, 
-        string memory _signature, 
+        address _target,
+        uint256 _value,
+        string memory _signature,
         bytes memory _data,
-        uint256 _eta, 
+        uint256 _eta,
         string memory _description
     ) external;
 

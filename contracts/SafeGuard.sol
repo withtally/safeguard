@@ -1,6 +1,6 @@
 /**
-* SPDX-License-Identifier: MIT
-*/
+ * SPDX-License-Identifier: MIT
+ */
 
 pragma solidity 0.8.7;
 
@@ -14,8 +14,8 @@ import "./ISafeGuard.sol";
  */
 contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     /**
-    * @dev events definition
-    */
+     * @dev events definition
+     */
     event CancelTransaction(
         bytes32 indexed txHash,
         address indexed target,
@@ -51,16 +51,16 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     );
 
     /**
-    * @dev Roles definitions
-    */
+     * @dev Roles definitions
+     */
     bytes32 public constant SAFEGUARD_ADMIN_ROLE = keccak256("SAFEGUARD_ADMIN_ROLE");
     bytes32 public constant PROPOSER_ROLE = keccak256("PROPOSER_ROLE");
     bytes32 public constant EXECUTOR_ROLE = keccak256("EXECUTOR_ROLE");
     bytes32 public constant CANCELER_ROLE = keccak256("CANCELER_ROLE");
 
     /**
-    * @dev The address of the Timelock
-    */
+     * @dev The address of the Timelock
+     */
     ITimelock public timelock;
 
     /**
@@ -119,7 +119,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
         string memory _signature,
         bytes memory _data,
         uint256 _eta
-    ) public override pure virtual returns (bytes32) {
+    ) public pure virtual override returns (bytes32) {
         return keccak256(abi.encode(_target, _value, _signature, _data, _eta));
     }
 
