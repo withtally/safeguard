@@ -79,7 +79,7 @@ contract SafeGuardFactory is AccessControl, Ownable {
     /**
      * @notice Creates new instance of a SafeGuard contract
      * @param _delay The amount of time a transaction needs to wait before being executed
-     * @param _safeGuardName The value that the transaction needs
+     * @param _safeGuardName The name to identify the new SafeGuard
      * @param _admin The address of the safeGuard radministrato
      * @param _roles Initial roles list to assign on the SafeGuard
      * @param _rolesAssignees  Initial roles assignees on the SafeGuard
