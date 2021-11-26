@@ -201,7 +201,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     ) public payable override justByRole(EXECUTOR_ROLE) {
         bytes32 txHash = hashProposalTx(_target, _value, _signature, _data, _eta);
         require(timelock.queuedTransactions(txHash), "SafeGuard::executeTransaction: transaction should be queued");
-        Address.sendValue(payable(_timelock), msg.value);
+        Address.sendValue(payable(timelock), msg.value);
         timelock.executeTransaction(_target, _value, _signature, _data, _eta);
         emit ExecuteTransaction(txHash, _target, _value, _signature, _data, _eta);
     }
