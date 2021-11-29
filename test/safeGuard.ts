@@ -5,33 +5,39 @@ import { BigNumberish } from "ethers";
 
 // types
 import { Timelock, SafeGuard } from "../typechain";
+import { MockContract } from "../typechain/MockContract";
 import { User } from "./types";
 
 // contract artifacts
 import SafeGuardArtifact from "../artifacts/contracts/SafeGuard.sol/SafeGuard.json";
 import TimelockArtifact from "../artifacts/contracts/mocks/Timelock.sol/Timelock.json";
+import MockContractArtifact from "../artifacts/contracts/mocks/MockContract.sol/MockContract.json";
 
 // utils
 import { mineBlockAtTimestamp, getTransactionEta } from "./utils";
 
 // constants
 import { REQUIRES_PERMISSION, TIMELOCK_ALREADY_DEFINED } from "./constants/error-messages.json";
+import { BigNumber } from "@ethereum-waffle/provider/node_modules/ethers";
 
 const { deployContract } = waffle;
 
 describe("SafeGuard - Unit tests", function () {
   const timelockDelay = 2; // seconds
   const timelockInterface = new ethers.utils.Interface(TimelockArtifact.abi);
+  const mockContractInterface = new ethers.utils.Interface(MockContractArtifact.abi)
 
   let admin: User;
   let proposer: User;
   let executer: User;
   let canceler: User;
   let proposerDefinedOnCreation: User;
+  let receiver: User;
   let proposedAdminAddress: string;
 
   let timelock: Timelock;
   let safeGuard: SafeGuard;
+  let mockContract: MockContract;
   let adminRole: string;
   let proposerRole: string;
   let executerRole: string;
@@ -65,8 +71,14 @@ describe("SafeGuard - Unit tests", function () {
       signer: signers[4],
       address: await signers[4].getAddress(),
     };
+    receiver = {
+      signer: signers[5],
+      address: await signers[5].getAddress(),
+    };
 
     proposedAdminAddress = await signers[3].getAddress();
+
+    mockContract = (await deployContract(admin.signer, MockContractArtifact, [])) as MockContract;
 
     // contract deployments
 
@@ -275,6 +287,59 @@ describe("SafeGuard - Unit tests", function () {
       ).to.emit(timelock, "ExecuteTransaction");
 
       expect(await timelock.pendingAdmin()).to.be.eq(proposedAdminAddress);
+    });
+
+    it("should execute valued transactions", async function () {
+
+      const amountForTimelock = ethers.utils.parseEther('2');
+
+      expect(await ethers.provider.getBalance(timelock.address)).to.be.eq(ethers.utils.parseEther('0'));
+
+      await admin.signer.sendTransaction({
+        to: timelock.address,
+        value: amountForTimelock
+      });
+
+      expect(await ethers.provider.getBalance(timelock.address)).to.be.eq(amountForTimelock);
+
+      eta = await getTransactionEta(timelockDelay);
+
+      const amountTransaction = ethers.utils.parseEther('1');
+      const valuedTarget = mockContract.address
+      const valuedSignature = "";
+      const valueValuedTransaction = amountTransaction;
+      const callDataValuedTran = mockContractInterface.encodeFunctionData("_transfer", [
+        receiver.address,
+        amountTransaction,
+      ]);
+
+      const receiverBalanceBefore = await ethers.provider.getBalance(receiver.address)
+
+      await expect(
+        safeGuard.connect(proposer.signer).queueTransaction(
+          valuedTarget, 
+          valueValuedTransaction, 
+          valuedSignature, 
+          callDataValuedTran, 
+          eta),
+      ).to.emit(timelock, "QueueTransaction");
+
+      await mineBlockAtTimestamp(eta);
+
+      await expect(
+        safeGuard.connect(executer.signer).executeTransaction(
+          valuedTarget, 
+          valueValuedTransaction, 
+          valuedSignature, 
+          callDataValuedTran, 
+          eta),
+      ).to.emit(timelock, "ExecuteTransaction");
+
+      const receiverBalanceAfter = await ethers.provider.getBalance(receiver.address)
+
+      expect(receiverBalanceAfter.sub(receiverBalanceBefore)).to.be.equal(amountTransaction);
+
+      expect(await ethers.provider.getBalance(timelock.address)).to.be.eq(ethers.utils.parseEther('1'));
     });
 
     it("should not be able to execute a not queued transaction", async function () {

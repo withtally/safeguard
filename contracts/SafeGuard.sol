@@ -6,6 +6,7 @@ pragma solidity 0.8.7;
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 import "./ITimelock.sol";
 import "./ISafeGuard.sol";
 
@@ -201,7 +202,7 @@ contract SafeGuard is ISafeGuard, AccessControlEnumerable, Ownable {
     ) public payable override justByRole(EXECUTOR_ROLE) {
         bytes32 txHash = hashProposalTx(_target, _value, _signature, _data, _eta);
         require(timelock.queuedTransactions(txHash), "SafeGuard::executeTransaction: transaction should be queued");
-        Address.sendValue(payable(timelock), msg.value);
+        Address.sendValue(payable(address(timelock)), msg.value);
         timelock.executeTransaction(_target, _value, _signature, _data, _eta);
         emit ExecuteTransaction(txHash, _target, _value, _signature, _data, _eta);
     }
