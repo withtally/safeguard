@@ -1,5 +1,8 @@
 # Tally SafeGuard [![Coverage Status](https://coveralls.io/repos/github/withtally/safeguard/badge.svg?branch=main)](https://coveralls.io/github/withtally/safeguard?branch=main) [![Styled with Prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://prettier.io) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+# Tally SafeGuard is Audited by OpenZeppelin
+See the [Audit Report](https://blog.openzeppelin.com/tally-safeguard-audit/)
+
 ## Project Abstract
 
 SafeGuard governance accountability tool built around the Gnosis Safe multisig. It's a multisig system that allows governance to retain veto power over Gnosis Safe contracts, and allows governance to reclaim funds entrusted to multsig holders without requiring multisig signatories approval.
